@@ -42,6 +42,9 @@ lcd_image_t yegImage = {"yeg-big.lcd", YEG_SIZE, YEG_SIZE};
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 Sd2Card card;
 
+// Forward declaration for getRestaurant function.
+void getRestaurant(int restIndex, restaurant* restPtr);
+
 /**
  * Given an input color, this function redraws the cursor at the current cursor
  * position colored the input color.
@@ -128,7 +131,15 @@ void setup() {
   CursorPos.Y = DISPLAY_HEIGHT/2;
 
   // draw the cursor in initial position
-  redrawCursor(TFT_RED);              
+  redrawCursor(TFT_RED); 
+
+  // Go through all the restaurants (it doesn't read the first 8 restaurants
+  // otherwise, for some reason)
+  restaurant rest; 
+
+  for (int i = 0; i < NUM_RESTAURANTS; i++) {
+    getRestaurant(i, &rest);   
+  }          
 }
 
 void restaurantListScreen() {
@@ -179,16 +190,69 @@ void drawNearRestaurants() {
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
     getRestaurant(i, &rest);
 
-    int32_t X = lon_to_x(rest.lon);
-    int32_t Y = lat_to_y(rest.lat);
+    int16_t X = lon_to_x(rest.lon);
+    int16_t Y = lat_to_y(rest.lat);
 
-    if (X >= MapPos.X && X <= (MapPos.X + MAP_DISP_WIDTH) &&
-        Y >= MapPos.Y && Y <= (MapPos.Y + MAP_DISP_HEIGHT)) {
+    if (X >= (MapPos.X + 2) && X <= (MapPos.X + MAP_DISP_WIDTH - 2) &&
+        Y >= (MapPos.Y + 2) && Y <= (MapPos.Y + MAP_DISP_HEIGHT - 2)) {
 
       tft.fillCircle(X - MapPos.X, Y - MapPos.Y, 3, TFT_BLUE);  
 
     }
   }
+}
+
+/**
+ * Insertion sort. Sorts restaurants based on Manhattan distance.
+ *
+ * @param n Length of the array.
+ * @param A The array to sort.
+ */
+void isort(int n, RestDist A[]) {
+  int i = 1;
+
+  while (i < n) {
+    int j = i;
+
+    while (j > 0 && A[j - 1].dist > A[j].dist) {
+      RestDist temp = A[j - 1];
+      A[j - 1] = A[j];
+      A[j] = temp;
+
+      j--;
+    }
+
+    i++;
+  }
+}
+
+/**
+ * Grabs all the restaurants and sorts them based on proximity to the cursor.
+ */
+void sortRestaurants() {
+  restaurant rest; 
+
+  for (int32_t i = 0; i < NUM_RESTAURANTS; i++) {
+    getRestaurant(i, &rest);
+
+    int16_t X1 = lon_to_x(rest.lon);
+    int16_t Y1 = lat_to_y(rest.lat);
+
+    int16_t X2 = MapPos.X + CursorPos.X;
+    int16_t Y2 = MapPos.Y + CursorPos.Y;
+
+    int32_t manhattanDist = ManhattanDist(X1, Y1, X2, Y2);
+
+    restDistances[i].index = i;
+    restDistances[i].dist = manhattanDist;
+  }
+
+  for (int32_t i = 0; i < 21; i++) {
+    int a = restDistances[i].index;
+  }
+  Serial.println("-----------------------------");
+
+  //isort(NUM_RESTAURANTS, restDistances);
 }
 
 /**
@@ -303,9 +367,11 @@ void processTouchScreen() {
 		return;
 	}
 
-  Serial.println("Pressed");
+  int16_t X = map(touchscreen.y, TS_MINX, TS_MAXX, DISPLAY_WIDTH-1, 0);
 
-	drawNearRestaurants();
+  if (X < MAP_DISP_WIDTH) {
+    drawNearRestaurants();
+  }
 }
 
 /**
@@ -315,17 +381,14 @@ int main() {
   setup();
 
   int mode = 0;
-  int counter = 0;
+  int counter = 450;
 
   while (true) {
     processJoystick();
     processTouchScreen();
 
-    if (counter > 100) {
-      Serial.println(CursorPos.X);
-      Serial.println(CursorPos.Y);
-      Serial.println(MapPos.X);
-      Serial.println(MapPos.Y);
+    if (counter > 500) {
+      sortRestaurants();
       counter = 0;
     }
 

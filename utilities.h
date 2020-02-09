@@ -5,10 +5,10 @@
 // These constants are for the 2048 by 2048 map .
 #define MAP_WIDTH 2048
 #define MAP_HEIGHT 2048
-#define LAT_NORTH 53618581
-#define LAT_SOUTH 53409531
-#define LON_WEST -113686521
-#define LON_EAST -113334961
+#define LAT_NORTH 5361858l
+#define LAT_SOUTH 5340953l
+#define LON_WEST -11368652l
+#define LON_EAST -11333496l
 
 struct restaurant {
   int32_t lat;
@@ -26,30 +26,6 @@ struct Coord {
   int32_t X;
   int32_t Y;
 };
-
-/**
- * Insertion sort.
- *
- * @param n Length of the array.
- * @param A The array to sort.
- */
-void isort(int n, int A[]) {
-  int i = 1;
-
-  while (i < n) {
-    int j = i;
-
-    while (j > 0 && A[j - 1] > A[j]) {
-      int temp = A[j - 1];
-      A[j - 1] = A[j];
-      A[j] = temp;
-
-      j--;
-    }
-
-    i++;
-  }
-}
 
 /**
  * The following functions were provided from eClass. They convert between
@@ -77,6 +53,6 @@ int32_t y_to_lat(int16_t y) {
  * @param n Length of the array.
  * @param A The array to sort.
  */
-// int32_t ManhattanDist(int_32t x1, int_32t y1, int_32t x2, int_32t y2) {
-//   return abs(x1 - x2) + abs(y1 - y2);
-// }
+int32_t ManhattanDist(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
+  return abs(x1 - x2) + abs(y1 - y2);
+}
