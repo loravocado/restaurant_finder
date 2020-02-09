@@ -71,7 +71,7 @@ void redrawMap(int prev_X, int prev_Y) {
   tft display initialization.
 */
 void tftInitialization() {
-  uint16_t ID = tft.readID();   
+  uint16_t ID = tft.readID();
   tft.begin(ID);
 
   tft.setRotation(1);
@@ -128,16 +128,10 @@ void setup() {
   CursorPos.Y = DISPLAY_HEIGHT/2;
 
   // draw the cursor in initial position
-  redrawCursor(TFT_RED);              
+  redrawCursor(TFT_RED);
 }
 
-void restaurantListScreen() {
-  tft.fillScreen(TFT_BLACK);
 
-  // Grab the 21 closest restaurants
-
-  // Display them in a list
-}
 
 void shiftScreen() {
   lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
@@ -159,7 +153,7 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 
   if (blockNum == current_block) {
     *restPtr = restBlock[restIndex % 8];
-  } 
+  }
   else {
     while (!card.readBlock(blockNum, (uint8_t*) restBlock)) {
       Serial.print("Read block failed, trying again.");
@@ -170,11 +164,65 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
   }
 }
 
+void unhighlightRest(int pos) {
+  restaurant rest;
+  tft.setCursor(0, pos);
+  tft.fillRect(0, pos, DISPLAY_WIDTH, 20, TFT_BLACK);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  getRestaurant(pos/20, &rest);
+  tft.print(rest.name);
+}
+
+void highlightRest(int pos){
+  restaurant rest;
+  tft.setCursor(0, pos);
+  tft.fillRect(0, pos, DISPLAY_WIDTH, 20, TFT_WHITE);
+  tft.setTextColor(TFT_BLACK, TFT_WHITE);
+  getRestaurant(pos/20, &rest);
+  tft.print(rest.name);
+}
+
+
+void restaurantListScreen() {
+  int position = 0;
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.fillScreen(TFT_BLACK);
+  // Grab the 21 closest restaurants
+  restaurant rest;
+  for (int i = 0; i < 21; i++) {
+    getRestaurant(i, &rest);
+    tft.setCursor(0, 20*i); tft.print(rest.name);
+    }
+  highlightRest(position);
+
+  while (true) {
+    int buttonVal = digitalRead(JOY_SEL);
+    int yVal = analogRead(JOY_VERT);
+    if (yVal == 0 ) {
+      unhighlightRest(position);
+      position -= 20;
+      position = constrain(position, 0, DISPLAY_HEIGHT -20);
+      highlightRest(position);
+    }
+    else if (yVal == 1023 ) {
+      unhighlightRest(position);
+      position += 20;
+      position = constrain(position, 0, DISPLAY_HEIGHT -20);
+      highlightRest(position);
+    }
+    else if (buttonVal == LOW) {
+      break;
+    }
+  }
+}
+  // Display them in a list
+
+
 /**
  * Draws restaurants within the bounds of the display.
  */
 void drawNearRestaurants() {
-  restaurant rest; 
+  restaurant rest;
 
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
     getRestaurant(i, &rest);
@@ -185,7 +233,7 @@ void drawNearRestaurants() {
     if (X >= MapPos.X && X <= (MapPos.X + MAP_DISP_WIDTH) &&
         Y >= MapPos.Y && Y <= (MapPos.Y + MAP_DISP_HEIGHT)) {
 
-      tft.fillCircle(X - MapPos.X, Y - MapPos.Y, 3, TFT_BLUE);  
+      tft.fillCircle(X - MapPos.X, Y - MapPos.Y, 3, TFT_BLUE);
 
     }
   }
@@ -217,15 +265,16 @@ void processJoystick() {
     listScreen = true;
     restaurantListScreen();
   }
-  else if (listScreen == true && buttonVal == LOW) {
-    listScreen = false;
+  if (listScreen == true && buttonVal == LOW) {
     tft.fillScreen(TFT_BLACK);
 
     lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
                    0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
+    listScreen = false;
   }
-  else {
+
+  else if (listScreen == false){
   // check if the joystick is moved
     if (abs(xVal - JOY_CENTER) > JOY_DEADZONE) {
       CursorPos.X -= MAX_SPEED * (xVal - JOY_CENTER) / (JOY_CENTER);
@@ -291,7 +340,7 @@ void processJoystick() {
 }
 
 /**
- * Processes touchscreen input. 
+ * Processes touchscreen input.
  */
 void processTouchScreen() {
 	TSPoint touchscreen = ts.getPoint();
