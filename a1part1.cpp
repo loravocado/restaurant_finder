@@ -131,15 +131,15 @@ void setup() {
   CursorPos.Y = DISPLAY_HEIGHT/2;
 
   // draw the cursor in initial position
-  redrawCursor(TFT_RED); 
+  redrawCursor(TFT_RED);
 
   // Go through all the restaurants (it doesn't read the first 8 restaurants
   // otherwise, for some reason)
-  restaurant rest; 
+  restaurant rest;
 
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
-    getRestaurant(i, &rest);   
-  }          
+    getRestaurant(i, &rest);
+  }
 }
 
 
@@ -178,32 +178,31 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 void unhighlightRest(int pos) {
   restaurant rest;
   tft.setCursor(0, pos);
-  tft.fillRect(0, pos, DISPLAY_WIDTH, 20, TFT_BLACK);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  getRestaurant(pos/20, &rest);
+  getRestaurant(pos/15, &rest);
   tft.print(rest.name);
 }
 
 void highlightRest(int pos){
   restaurant rest;
   tft.setCursor(0, pos);
-  tft.fillRect(0, pos, DISPLAY_WIDTH, 20, TFT_WHITE);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
-  getRestaurant(pos/20, &rest);
+  getRestaurant(pos/15, &rest);
   tft.print(rest.name);
 }
 
 
 void restaurantListScreen() {
   int position = 0;
+  tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.fillScreen(TFT_BLACK);
   // Grab the 21 closest restaurants
   restaurant rest;
   for (int i = 0; i < 21; i++) {
     getRestaurant(i, &rest);
-    tft.setCursor(0, 20*i); tft.print(rest.name);
-    }
+    tft.setCursor(0, 15*i); tft.print(rest.name);
+  }
   highlightRest(position);
 
   while (true) {
@@ -211,13 +210,13 @@ void restaurantListScreen() {
     int yVal = analogRead(JOY_VERT);
     if (yVal == 0 ) {
       unhighlightRest(position);
-      position -= 20;
+      position -= 15;
       position = constrain(position, 0, DISPLAY_HEIGHT -20);
       highlightRest(position);
     }
     else if (yVal == 1023 ) {
       unhighlightRest(position);
-      position += 20;
+      position += 15;
       position = constrain(position, 0, DISPLAY_HEIGHT -20);
       highlightRest(position);
     }
@@ -278,9 +277,9 @@ void isort(int n, RestDist A[]) {
  * Grabs all the restaurants and sorts them based on proximity to the cursor.
  */
 void sortRestaurants() {
-  restaurant rest; 
+  restaurant rest;
 
-  for (int32_t i = 0; i < NUM_RESTAURANTS; i++) {
+  for (int i = 0; i < NUM_RESTAURANTS; i++) {
     getRestaurant(i, &rest);
 
     int16_t X1 = lon_to_x(rest.lon);
@@ -295,7 +294,7 @@ void sortRestaurants() {
     restDistances[i].dist = manhattanDist;
   }
 
-  for (int32_t i = 0; i < 21; i++) {
+  for (int i = 0; i < 21; i++) {
     int a = restDistances[i].index;
   }
   Serial.println("-----------------------------");
