@@ -268,12 +268,7 @@ void sortRestaurants() {
     smallerRest.index = i;
     smallerRest.dist = manhattanDist;
 
-<<<<<<< HEAD
     restDistances[i] = smallerRest;
-=======
-  for (int i = 0; i < 21; i++) {
-    int a = restDistances[i].index;
->>>>>>> d97eae2fcf5ae77f5c7ee52257ab8543be8df4ad
   }
 
   isort(NUM_RESTAURANTS, restDistances);
