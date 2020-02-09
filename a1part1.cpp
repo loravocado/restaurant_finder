@@ -185,11 +185,11 @@ void processJoystick() {
   int prev_X = cursorX;
   int prev_Y = cursorY;
 
-  if (listScreen == false && buttonVal == 0) {
+  if (listScreen == false && buttonVal == LOW) {
     listScreen = true;
     restaurantListScreen();
   }
-  else if (listScreen == true && buttonVal == 0) {
+  else if (listScreen == true && buttonVal == LOW) {
     listScreen = false;
     lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
                    0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
@@ -209,24 +209,25 @@ void processJoystick() {
 
     if (cursorX == max_X) {
       yegMiddleX += DISPLAY_WIDTH;
-      yegMiddleX = constrain(yegMiddleX, 0, 2048);
+      yegMiddleX = constrain(yegMiddleX, 0, 2048 - CURSOR_SIZE/2);
       shiftScreen();
     }
     if (cursorX == min_X) {
       yegMiddleX -= DISPLAY_WIDTH;
-      yegMiddleX = constrain(yegMiddleX, 0, 2048);
+      yegMiddleX = constrain(yegMiddleX, 0, 2048 - CURSOR_SIZE/2);
       shiftScreen();
     }
     if (cursorY == max_Y) {
       yegMiddleY += DISPLAY_HEIGHT;
-      yegMiddleY = constrain(yegMiddleY, 0, 2048);
+      yegMiddleY = constrain(yegMiddleY, 0, 2048 - CURSOR_SIZE/2);
       shiftScreen();
     }
     if (cursorY == min_Y) {
       yegMiddleY -= DISPLAY_HEIGHT;
-      yegMiddleY = constrain(yegMiddleY, 0, 2048);
+      yegMiddleY = constrain(yegMiddleY, 0, 2048 - CURSOR_SIZE/2);
       shiftScreen();
     }
+
 
     // draw a small patch of the Edmonton map at the old cursor position before
     // drawing a red rectangle at the new cursor position
@@ -234,7 +235,7 @@ void processJoystick() {
       redrawMap(prev_X, prev_Y);
       redrawCursor(TFT_RED);
     }
-}
+  }
   delay(10);
 }
 
