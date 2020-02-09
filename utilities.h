@@ -5,10 +5,10 @@
 // These constants are for the 2048 by 2048 map .
 # define MAP_WIDTH 2048
 # define MAP_HEIGHT 2048
-# define LAT_NORTH 5361858 l
-# define LAT_SOUTH 5340953 l
-# define LON_WEST -11368652 l
-# define LON_EAST -11333496 l
+# define LAT_NORTH 53618581
+# define LAT_SOUTH 53409531
+# define LON_WEST -113686521
+# define LON_EAST -113334961
 
 struct restaurant {
   int32_t lat;
