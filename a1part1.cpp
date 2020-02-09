@@ -142,8 +142,9 @@ void setup() {
   }
 }
 
-
-
+/**
+ * Shifts the screen to the new position as required.
+ */
 void shiftScreen() {
   lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
                  0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
@@ -175,31 +176,43 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
   }
 }
 
+/**
+ * Unhighlights the restaurant at the given position.
+ */
 void unhighlightRest(int pos) {
   restaurant rest;
+  getRestaurant(restDistances[pos/15].index, &rest);
+
   tft.setCursor(0, pos);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  getRestaurant(pos/15, &rest);
   tft.print(rest.name);
 }
 
+/**
+ * Highlights the currently selected restaurant.
+ */
 void highlightRest(int pos){
   restaurant rest;
+  getRestaurant(restDistances[pos/15].index, &rest);
+
   tft.setCursor(0, pos);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
-  getRestaurant(pos/15, &rest);
   tft.print(rest.name);
 }
 
+/**
+ * Code for the list of restaurants screen.
+ */
 void restaurantListScreen() {
-  int position = 0;
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.fillScreen(TFT_BLACK);
+
+  int position = 0; // Position on the screen in terms of pixels
+
   // Grab the 21 closest restaurants
-  restaurant rest;
   for (int i = 0; i < 21; i++) {
-    getRestaurant(i, &rest);
+    restaurant rest;
+    getRestaurant(restDistances[i].index, &rest);
     tft.setCursor(0, 15*i); tft.print(rest.name);
   }
   highlightRest(position);
@@ -207,6 +220,7 @@ void restaurantListScreen() {
   while (true) {
     int buttonVal = digitalRead(JOY_SEL);
     int yVal = analogRead(JOY_VERT);
+
     if (yVal == 0 ) {
       unhighlightRest(position);
       position -= 15;
@@ -299,6 +313,7 @@ void processJoystick() {
   if (listScreen == false && buttonVal == LOW) {
     listScreen = true;
 
+    tft.fillScreen(TFT_BLACK);
     sortRestaurants();
     restaurantListScreen();
   }
@@ -404,19 +419,10 @@ int main() {
   setup();
 
   int mode = 0;
-  int counter = 450;
 
   while (true) {
     processJoystick();
     processTouchScreen();
-
-    if (counter > 500) {
-      
-      counter = 0;
-    }
-
-    counter++;
-    delay(10);
   }
 
   Serial.end();
