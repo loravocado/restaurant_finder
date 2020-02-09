@@ -1,7 +1,7 @@
 build-mega2560/userlibs/MCUFRIEND_kbv/MCUFRIEND_kbv.cpp.o: \
- /home/ben/arduino-ua/libraries/MCUFRIEND_kbv/MCUFRIEND_kbv.cpp \
- /home/ben/arduino-ua/libraries/MCUFRIEND_kbv/MCUFRIEND_kbv.h \
- /home/ben/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.h \
+ /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/MCUFRIEND_kbv.cpp \
+ /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/MCUFRIEND_kbv.h \
+ /home/lora/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Arduino.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/binary.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/WCharacter.h \
@@ -13,5 +13,5 @@ build-mega2560/userlibs/MCUFRIEND_kbv/MCUFRIEND_kbv.cpp.o: \
  /usr/share/arduino/hardware/arduino//cores/arduino/new.h \
  /usr/share/arduino/hardware/arduino//variants/mega/pins_arduino.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Print.h \
- /home/ben/arduino-ua/libraries/Adafruit_GFX/gfxfont.h \
- /home/ben/arduino-ua/libraries/MCUFRIEND_kbv/utility/mcufriend_shield.h
+ /home/lora/arduino-ua/libraries/Adafruit_GFX/gfxfont.h \
+ /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/utility/mcufriend_shield.h

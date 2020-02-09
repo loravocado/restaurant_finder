@@ -1,6 +1,4 @@
-build-mega2560/userlibs/MCUFRIEND_kbv/OPENSMART_kbv.cpp.o: \
- /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/OPENSMART_kbv.cpp \
- /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/OPENSMART_kbv.h \
+build-mega2560/lcd_image.cpp.o: lcd_image.cpp \
  /home/lora/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Arduino.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/binary.h \
@@ -14,7 +12,12 @@ build-mega2560/userlibs/MCUFRIEND_kbv/OPENSMART_kbv.cpp.o: \
  /usr/share/arduino/hardware/arduino//variants/mega/pins_arduino.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Print.h \
  /home/lora/arduino-ua/libraries/Adafruit_GFX/gfxfont.h \
- /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/MCUFRIEND_kbv.cpp \
  /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/MCUFRIEND_kbv.h \
- /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/utility/mcufriend_shield.h \
- /home/lora/arduino-ua/libraries/MCUFRIEND_kbv/utility/mcufriend_special.h
+ /usr/share/arduino/libraries/SPI/SPI.h \
+ /home/lora/arduino-ua/libraries/SD/SD.h \
+ /home/lora/arduino-ua/libraries/SD/utility/SdFat.h \
+ /home/lora/arduino-ua/libraries/SD/utility/Sd2Card.h \
+ /home/lora/arduino-ua/libraries/SD/utility/Sd2PinMap.h \
+ /home/lora/arduino-ua/libraries/SD/utility/SdInfo.h \
+ /home/lora/arduino-ua/libraries/SD/utility/FatStructs.h \
+ /home/lora/arduino-ua/libraries/SD/utility/SdFatUtil.h lcd_image.h

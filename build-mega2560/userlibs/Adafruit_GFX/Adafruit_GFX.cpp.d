@@ -1,6 +1,6 @@
 build-mega2560/userlibs/Adafruit_GFX/Adafruit_GFX.cpp.o: \
- /home/ben/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.cpp \
- /home/ben/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.h \
+ /home/lora/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.cpp \
+ /home/lora/arduino-ua/libraries/Adafruit_GFX/Adafruit_GFX.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Arduino.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/binary.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/WCharacter.h \
@@ -12,5 +12,5 @@ build-mega2560/userlibs/Adafruit_GFX/Adafruit_GFX.cpp.o: \
  /usr/share/arduino/hardware/arduino//cores/arduino/new.h \
  /usr/share/arduino/hardware/arduino//variants/mega/pins_arduino.h \
  /usr/share/arduino/hardware/arduino//cores/arduino/Print.h \
- /home/ben/arduino-ua/libraries/Adafruit_GFX/gfxfont.h \
- /home/ben/arduino-ua/libraries/Adafruit_GFX/glcdfont.c
+ /home/lora/arduino-ua/libraries/Adafruit_GFX/gfxfont.h \
+ /home/lora/arduino-ua/libraries/Adafruit_GFX/glcdfont.c
