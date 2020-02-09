@@ -175,59 +175,54 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
   }
 }
 
-void unhighlightRest(int pos) {
-  restaurant rest;
-  tft.setCursor(0, pos);
-  tft.fillRect(0, pos, DISPLAY_WIDTH, 20, TFT_BLACK);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  getRestaurant(pos/20, &rest);
-  tft.print(rest.name);
-}
-
-void highlightRest(int pos){
-  restaurant rest;
-  tft.setCursor(0, pos);
-  tft.fillRect(0, pos, DISPLAY_WIDTH, 20, TFT_WHITE);
-  tft.setTextColor(TFT_BLACK, TFT_WHITE);
-  getRestaurant(pos/20, &rest);
-  tft.print(rest.name);
-}
-
-
+/**
+ * 
+ */
 void restaurantListScreen() {
-  int position = 0;
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.fillScreen(TFT_BLACK);
-  // Grab the 21 closest restaurants
-  restaurant rest;
-  for (int i = 0; i < 21; i++) {
-    getRestaurant(i, &rest);
-    tft.setCursor(0, 20*i); tft.print(rest.name);
-    }
-  highlightRest(position);
+  tft.setCursor(0, 0);
+  tft.setTextWrap(false);
+
+  int position = 0; // Current position in the list
 
   while (true) {
     int buttonVal = digitalRead(JOY_SEL);
     int yVal = analogRead(JOY_VERT);
-    if (yVal == 0 ) {
-      unhighlightRest(position);
-      position -= 20;
-      position = constrain(position, 0, DISPLAY_HEIGHT -20);
-      highlightRest(position);
+    bool wasChange = false;
+
+    if (yVal <= 20) {
+      position--;
+      position = constrain(position, 0, 20);
+      wasChange = true;
     }
-    else if (yVal == 1023 ) {
-      unhighlightRest(position);
-      position += 20;
-      position = constrain(position, 0, DISPLAY_HEIGHT -20);
-      highlightRest(position);
+    else if (yVal >= 1000) {
+      position++;
+      position = constrain(position, 0, 20);
+      wasChange = true;
     }
-    else if (buttonVal == LOW) {
+
+    if (wasChange == true) {
+      for (int16_t i = 0; i < 21; i++) {
+        restaurant rest;
+        getRestaurant(restDistances[i].index, &rest);
+
+        if (i != position) { // Not highlighted
+          tft.setTextColor(0xFFFF, 0x0000);
+        } else { // Highlighted
+          tft.setTextColor(0x0000, 0xFFFF);
+        }
+
+        tft.print(rest.name);
+        tft.print("\n");
+      }
+      tft.print("\n");
+    }
+    
+    if (buttonVal == LOW) {
       break;
     }
   }
 }
-  // Display them in a list
-
 
 /**
  * Draws restaurants within the bounds of the display.
@@ -251,30 +246,6 @@ void drawNearRestaurants() {
 }
 
 /**
- * Insertion sort. Sorts restaurants based on Manhattan distance.
- *
- * @param n Length of the array.
- * @param A The array to sort.
- */
-void isort(int n, RestDist A[]) {
-  int i = 1;
-
-  while (i < n) {
-    int j = i;
-
-    while (j > 0 && A[j - 1].dist > A[j].dist) {
-      RestDist temp = A[j - 1];
-      A[j - 1] = A[j];
-      A[j] = temp;
-
-      j--;
-    }
-
-    i++;
-  }
-}
-
-/**
  * Grabs all the restaurants and sorts them based on proximity to the cursor.
  */
 void sortRestaurants() {
@@ -291,16 +262,14 @@ void sortRestaurants() {
 
     int32_t manhattanDist = ManhattanDist(X1, Y1, X2, Y2);
 
-    restDistances[i].index = i;
-    restDistances[i].dist = manhattanDist;
+    RestDist smallerRest;
+    smallerRest.index = i;
+    smallerRest.dist = manhattanDist;
+
+    restDistances[i] = smallerRest;
   }
 
-  for (int32_t i = 0; i < 21; i++) {
-    int a = restDistances[i].index;
-  }
-  Serial.println("-----------------------------");
-
-  //isort(NUM_RESTAURANTS, restDistances);
+  isort(NUM_RESTAURANTS, restDistances);
 }
 
 /**
@@ -327,15 +296,18 @@ void processJoystick() {
 
   if (listScreen == false && buttonVal == LOW) {
     listScreen = true;
+
+    sortRestaurants();
     restaurantListScreen();
   }
   if (listScreen == true && buttonVal == LOW) {
+    listScreen = false;
+
     tft.fillScreen(TFT_BLACK);
 
     lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
                    0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
-    listScreen = false;
   }
 
   else if (listScreen == false){
@@ -437,7 +409,7 @@ int main() {
     processTouchScreen();
 
     if (counter > 500) {
-      sortRestaurants();
+      
       counter = 0;
     }
 

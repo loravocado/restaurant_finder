@@ -18,14 +18,38 @@ struct restaurant {
 };
 
 struct RestDist {
-  int32_t index; // [0, NUM_RESTAURANTS)
-  int32_t dist; 
+  uint16_t index; // [0, NUM_RESTAURANTS)
+  uint16_t dist; 
 };
 
 struct Coord {
   int32_t X;
   int32_t Y;
 };
+
+/**
+ * Insertion sort. Sorts restaurants based on Manhattan distance.
+ *
+ * @param n Length of the array.
+ * @param A The array to sort.
+ */
+void isort(int n, RestDist A[]) {
+  int i = 1;
+
+  while (i < n) {
+    int j = i;
+
+    while (j > 0 && A[j - 1].dist > A[j].dist) {
+      RestDist temp = A[j - 1];
+      A[j - 1] = A[j];
+      A[j] = temp;
+
+      j--;
+    }
+
+    i++;
+  }
+}
 
 /**
  * The following functions were provided from eClass. They convert between
