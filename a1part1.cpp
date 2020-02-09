@@ -164,24 +164,30 @@ void processJoystick() {
     }
 
     if (cursorX == max_X) {
-      yegMiddleX += DISPLAY_WIDTH;
-      yegMiddleX = constrain(yegMiddleX, 0, 2048 - CURSOR_SIZE/2);
-      shiftScreen();
+      if (yegMiddleX + 2*DISPLAY_WIDTH < YEG_SIZE) {
+        yegMiddleX += DISPLAY_WIDTH;
+        shiftScreen();
+
+      }
     }
     if (cursorX == min_X) {
-      yegMiddleX -= DISPLAY_WIDTH;
-      yegMiddleX = constrain(yegMiddleX, 0, 2048 - CURSOR_SIZE/2);
-      shiftScreen();
+      if (yegMiddleX - DISPLAY_WIDTH > 0) {
+        yegMiddleX -= DISPLAY_WIDTH;
+        shiftScreen();
+      }
     }
     if (cursorY == max_Y) {
-      yegMiddleY += DISPLAY_HEIGHT;
-      yegMiddleY = constrain(yegMiddleY, 0, 2048 - CURSOR_SIZE/2);
-      shiftScreen();
+      if (yegMiddleY + 2*DISPLAY_HEIGHT < YEG_SIZE) {
+        yegMiddleY += DISPLAY_HEIGHT;
+        shiftScreen();
+      }
     }
     if (cursorY == min_Y) {
-      yegMiddleY -= DISPLAY_HEIGHT;
-      yegMiddleY = constrain(yegMiddleY, 0, 2048 - CURSOR_SIZE/2);
-      shiftScreen();
+      if (yegMiddleY - DISPLAY_HEIGHT > 0) {
+        yegMiddleY -= DISPLAY_HEIGHT;
+        shiftScreen();
+      }
+
     }
 
 
