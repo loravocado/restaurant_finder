@@ -264,6 +264,8 @@ void SDcardInitialization() {
 void setup() {
   init();
 
+  pinMode(JOY_SEL, INPUT_PULLUP);
+
   Serial.begin(9600);
 
 	//    tft.reset();             // hardware reset
