@@ -18,45 +18,8 @@
 #include "lcd_image.h"
 #include <TouchScreen.h>
 
-MCUFRIEND_kbv tft;
-
-#define SD_CS 10
-
-#define DISPLAY_WIDTH  480
-#define DISPLAY_HEIGHT 320
-#define YEG_SIZE 2048
-
-#define YP A3
-#define XM A2
-#define YM 9
-#define XP 8
-
-//Map constants
-#define MAP_DISP_WIDTH (DISPLAY_WIDTH )
-#define MAP_DISP_HEIGHT DISPLAY_HEIGHT
-
-#define REST_START_BLOCK 4000000
-#define NUM_RESTAURANTS 1066
-
-//TS constants
-#define TS_MINX 100
-#define TS_MINY 120
-#define TS_MAXX 940
-#define TS_MAXY 920
-
-#define MINPRESSURE   10
-#define MAXPRESSURE 1000
-
-//Cursor constants
-#define CURSOR_SIZE 9
-#define MAX_SPEED 8
-
-//Joystick constants
-#define JOY_VERT  A9 // should connect A9 to pin VRx
-#define JOY_HORIZ A8
-#define JOY_SEL   53
-#define JOY_CENTER   512
-#define JOY_DEADZONE 64
+#include "utilities.h"
+#include "config.h"
 
 int yegMiddleX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
 int yegMiddleY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
@@ -69,20 +32,13 @@ int min_Y = CURSOR_SIZE/2;
 int max_Y = DISPLAY_HEIGHT - CURSOR_SIZE/2 - 1;
 bool listScreen = false;
 
+MCUFRIEND_kbv tft;
+
 lcd_image_t yegImage = {"yeg-big.lcd", YEG_SIZE, YEG_SIZE};
 
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 Sd2Card card;
-
-
-
-struct restaurant {
-  int32_t lat;
-  int32_t lon;
-  uint8_t rating; // from 0 to 10
-  char name[55];
-};
 
 // restBlock stores the current block in a global variable so
 // that we don't need to read the SD card each time if two entries are in the
@@ -117,8 +73,11 @@ void redrawMap(int prev_X, int prev_Y) {
                  CURSOR_SIZE, CURSOR_SIZE);
 }
 
-void restaurantListScreen() {
-  uint16_t ID = tft.readID();
+/*
+  tft display initialization.
+*/
+void tftInitialization() {
+  uint16_t ID = tft.readID();   
   tft.begin(ID);
 
   tft.setRotation(1);
@@ -126,41 +85,102 @@ void restaurantListScreen() {
 
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.setTextSize(2);
+}
 
-  // Display test results
-  tft.setCursor(0, 0); tft.print("RECENT SLOW RUN:");
-  tft.setCursor(0, 20); tft.print("Not yet run");
+/**
+ * SD card initialization for raw reads.
+ */
+void SDcardInitialization() {
+  Serial.print("Initializing SD card...");
+	if (!SD.begin(SD_CS)) {
+		Serial.println("failed! Is it inserted properly?");
+		while (true) {}
+	}
+	Serial.println("OK!");
+}
 
-  tft.setCursor(0, 60); tft.print("SLOW RUN AVG:");
-  tft.setCursor(0, 80); tft.print("Not yet run");
+/**
+ * Setup function.
+ */
+void setup() {
+  init();
 
-  tft.setCursor(0, 120);  tft.print("RECENT FAST RUN:");
-  tft.setCursor(0, 140); tft.print("Not yet run");
+  pinMode(JOY_SEL, INPUT_PULLUP);
 
-  tft.setCursor(0, 180); tft.print("FAST RUN AVG:");
-  tft.setCursor(0, 200); tft.print("Not yet run");
+  Serial.begin(9600);
 
-  // Slow test button
-  tft.drawRect(420, 0, 60, 160, TFT_RED);
-  tft.setCursor(445,40); tft.print("S");
-  tft.setCursor(445,58); tft.print("L");
-  tft.setCursor(445,76); tft.print("O");
-  tft.setCursor(445,94); tft.print("W");
+  tftInitialization();
+  SDcardInitialization();
 
-  // Fast test button
-  tft.drawRect(420, 160, 60, 160, TFT_RED);
-  tft.setCursor(445,200); tft.print("F");
-  tft.setCursor(445,218); tft.print("A");
-  tft.setCursor(445,236); tft.print("S");
-  tft.setCursor(445,254); tft.print("T");
+  // draws the centre of the Edmonton map, leaving the rightmost 60 columns
+  // black
+	lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
+                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
+
+  // initial cursor position is the middle of the screen
+  cursorX = (DISPLAY_WIDTH - 60)/2;
+  cursorY = DISPLAY_HEIGHT/2;
+
+  redrawCursor(TFT_RED);
+}
+
+void restaurantListScreen() {
+  tft.fillScreen(TFT_BLACK);
+
+  // Grab the 21 closest restaurants
+
+  // Display them in a list
 }
 
 void shiftScreen() {
   lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
                  0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
-  cursorX = (DISPLAY_WIDTH)/2 - 60;
+  cursorX = (DISPLAY_WIDTH)/2 - 30;
   cursorY = DISPLAY_HEIGHT/2;
   redrawCursor(TFT_RED);
+}
+
+/**
+ * Fast implementation of getting restaurants.
+ *
+ * @param restIndex The index of the restaurant to be received.
+ * @param restPtr A pointer to the restaurant struct that will be storing the
+ *                   received restaurant.
+ */
+void getRestaurant(int restIndex, restaurant* restPtr) {
+  uint32_t blockNum = REST_START_BLOCK + restIndex/8;
+
+  // If the block we need to look in is the same as the one previously
+    // searched, we can just look at the block (it is a global
+    // variable).
+  if (blockNum == current_block) {
+    *restPtr = restBlock[restIndex % 8];
+
+  // Otherwise, we get the new block.
+  } else {
+    while (!card.readBlock(blockNum, (uint8_t*) restBlock)) {
+      Serial.print("Read block failed, trying again.");
+    }
+
+    *restPtr = restBlock[restIndex % 8];
+    current_block = blockNum;
+  }
+}
+
+/**
+ * Temp code
+ */
+void drawNearRestaurants() {
+  restaurant rest; 
+
+  for (int i = 0; i < NUM_RESTAURANTS; i++) {
+    getRestaurant(i, &rest);
+
+    int32_t X = lon_to_x(rest.lon);
+    int32_t Y = lat_to_y(rest.lat);
+
+    
+  }
 }
 
 /**
@@ -213,14 +233,12 @@ void processJoystick() {
       if (yegMiddleX + 2*DISPLAY_WIDTH - 60 < YEG_SIZE) {
         yegMiddleX += DISPLAY_WIDTH - 60;
         shiftScreen();
-
       }
       else if(yegMiddleX + DISPLAY_WIDTH - 60 < YEG_SIZE) {
         yegMiddleX += (YEG_SIZE - yegMiddleX - DISPLAY_WIDTH + 60 );
         shiftScreen();
       }
     }
-
 
     if (cursorX == min_X) {
       if (yegMiddleX - DISPLAY_WIDTH > 0) {
@@ -243,6 +261,7 @@ void processJoystick() {
         shiftScreen();
       }
     }
+
     if (cursorY == min_Y) {
       if (yegMiddleY - DISPLAY_HEIGHT > 0) {
         yegMiddleY -= DISPLAY_HEIGHT;
@@ -255,7 +274,6 @@ void processJoystick() {
 
     }
 
-
     // draw a small patch of the Edmonton map at the old cursor position before
     // drawing a red rectangle at the new cursor position
     if ((prev_X != cursorX) || (prev_Y != cursorY)) {
@@ -263,123 +281,10 @@ void processJoystick() {
       redrawCursor(TFT_RED);
     }
   }
-  delay(10);
 }
 
 /**
- * SD card initialization for raw reads.
- */
-void SDcardInitialization() {
-  Serial.print("Initializing SD card...");
-	if (!SD.begin(SD_CS)) {
-		Serial.println("failed! Is it inserted properly?");
-		while (true) {}
-	}
-	Serial.println("OK!");
-}
-
-
-/**
- * Setup function.
- */
-void setup() {
-  init();
-
-  pinMode(JOY_SEL, INPUT_PULLUP);
-
-  Serial.begin(9600);
-
-	//    tft.reset();             // hardware reset
-  uint16_t ID = tft.readID();    // read ID from display
-  Serial.print("ID = 0x");
-  Serial.println(ID, HEX);
-  if (ID == 0xD3D3) ID = 0x9481; // write-only shield
-
-  // must come before SD.begin() ...
-  tft.begin(ID);                 // LCD gets ready to work
-
-  SDcardInitialization();
-	tft.setRotation(1);
-
-  tft.fillScreen(TFT_BLACK);
-
-  // draws the centre of the Edmonton map, leaving the rightmost 60 columns
-  // black
-	lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
-                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
-
-  // initial cursor position is the middle of the screen
-  cursorX = (DISPLAY_WIDTH - 60)/2;
-  cursorY = DISPLAY_HEIGHT/2;
-
-  redrawCursor(TFT_RED);
-}
-
-/**
- * Insertion sort.
- *
- * @param n Length of the array.
- * @param A The array to sort.
- */
-void isort(int n, int A[]) {
-  int i = 1;
-
-  while (i < n) {
-    int j = i;
-
-    while (j > 0 && A[j - 1] > A[j]) {
-      int temp = A[j - 1];
-      A[j - 1] = A[j];
-      A[j] = temp;
-
-      j--;
-    }
-
-    i++;
-  }
-}
-
-/**
- * Fast implementation of getting restaurants.
- *
- * @param restIndex The index of the restaurant to be received.
- * @param restPtr A pointer to the restaurant struct that will be storing the
- *                   received restaurant.
- */
-void getRestaurant(int restIndex, restaurant* restPtr) {
-  uint32_t blockNum = REST_START_BLOCK + restIndex/8;
-
-  // If the block we need to look in is the same as the one previously
-    // searched, we can just look at the block (it is a global
-    // variable).
-  if (blockNum == current_block) {
-    *restPtr = restBlock[restIndex % 8];
-
-  // Otherwise, we get the new block.
-  } else {
-    while (!card.readBlock(blockNum, (uint8_t*) restBlock)) {
-      Serial.print("Read block failed, trying again.");
-    }
-
-    *restPtr = restBlock[restIndex % 8];
-    current_block = blockNum;
-  }
-}
-
-/**
- * Temp code
- */
-void fastTest() {
-  restaurant rest;
-
-  for (int i = 0; i < NUM_RESTAURANTS; i++) {
-    getRestaurant(i, &rest);
-  }
-}
-
-/**
- * Processes touchscreen input. Runs the fast test or slow test depending
- * on which button is pressed.
+ * Processes touchscreen input. 
  */
 void processTouchScreen() {
 	TSPoint touchscreen = ts.getPoint();
@@ -391,15 +296,9 @@ void processTouchScreen() {
 		return;
 	}
 
-	int16_t Xpoint = map(touchscreen.y, TS_MINX, TS_MAXX, DISPLAY_WIDTH-1, 0);
-	//int16_t Ypoint = map(touchscreen.x, TS_MINY, TS_MAXY, DISPLAY_HEIGHT-1, 0);
+  Serial.println("Pressed");
 
-  //checks for touch area
-  if (Xpoint > 420) {
-    fastTest();
-  }
-
-	delay(200);
+	drawNearRestaurants();
 }
 
 /**
@@ -408,8 +307,14 @@ void processTouchScreen() {
 int main() {
   setup();
 
+  int mode = 0;
+  RestDist restDistances[NUM_RESTAURANTS];
+
   while (true) {
     processJoystick();
+    processTouchScreen();
+
+    delay(10);
   }
 
   Serial.end();
