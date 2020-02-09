@@ -23,8 +23,8 @@ struct RestDist {
 };
 
 struct Coord {
-  int32_t x;
-  int32_t y;
+  int32_t X;
+  int32_t Y;
 };
 
 /**
