@@ -177,7 +177,8 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 }
 
 /**
- * Unhighlights the restaurant at the given position.
+ * Unhighlights the restaurant at the given position in the restaurant list 
+ * menu.
  */
 void unhighlightRest(int pos) {
   restaurant rest;
@@ -189,7 +190,7 @@ void unhighlightRest(int pos) {
 }
 
 /**
- * Highlights the currently selected restaurant.
+ * Highlights the currently selected restaurant in the restaurant list menu.
  */
 void highlightRest(int pos){
   restaurant rest;
@@ -201,7 +202,11 @@ void highlightRest(int pos){
 }
 
 /**
- * Code for the list of restaurants screen.
+ * Code for the list of restaurants screen. Grabs the 21 closest restaurants 
+ * and displays them. The currently focused restaurant is highlighted in white.
+ * 
+ * Pressing the joystick selects the restaurant and moves the cursor there,
+ * centering it as well.
  */
 void restaurantListScreen() {
   tft.setTextSize(2);
@@ -241,7 +246,8 @@ void restaurantListScreen() {
 }
 
 /**
- * Draws restaurants within the bounds of the display.
+ * Draws restaurants within the bounds of the display. Restaurants are
+ * represented by a 3x3 pixel circle.
  */
 void drawNearRestaurants() {
   restaurant rest;
@@ -262,7 +268,8 @@ void drawNearRestaurants() {
 }
 
 /**
- * Grabs all the restaurants and sorts them based on proximity to the cursor.
+ * Grabs all the restaurants and sorts them based on proximity to the cursor. 
+ * Insertion sort is used to accomplish this.
  */
 void sortRestaurants() {
   restaurant rest;
@@ -393,7 +400,8 @@ void processJoystick() {
 }
 
 /**
- * Processes touchscreen input.
+ * Processes touchscreen input. If there was a touch on the map, draw the
+ * restaurants that fit on the screen.
  */
 void processTouchScreen() {
 	TSPoint touchscreen = ts.getPoint();
