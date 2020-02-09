@@ -131,15 +131,15 @@ void setup() {
   CursorPos.Y = DISPLAY_HEIGHT/2;
 
   // draw the cursor in initial position
-  redrawCursor(TFT_RED); 
+  redrawCursor(TFT_RED);
 
   // Go through all the restaurants (it doesn't read the first 8 restaurants
   // otherwise, for some reason)
-  restaurant rest; 
+  restaurant rest;
 
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
-    getRestaurant(i, &rest);   
-  }          
+    getRestaurant(i, &rest);
+  }
 }
 
 
@@ -175,47 +175,49 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
   }
 }
 
-/**
- * 
- */
-void restaurantListScreen() {
-  tft.fillScreen(TFT_BLACK);
-  tft.setCursor(0, 0);
-  tft.setTextWrap(false);
+void unhighlightRest(int pos) {
+  restaurant rest;
+  tft.setCursor(0, pos);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  getRestaurant(pos/15, &rest);
+  tft.print(rest.name);
+}
 
-  int position = 0; // Current position in the list
+void highlightRest(int pos){
+  restaurant rest;
+  tft.setCursor(0, pos);
+  tft.setTextColor(TFT_BLACK, TFT_WHITE);
+  getRestaurant(pos/15, &rest);
+  tft.print(rest.name);
+}
+
+void restaurantListScreen() {
+  int position = 0;
+  tft.setTextSize(2);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.fillScreen(TFT_BLACK);
+  // Grab the 21 closest restaurants
+  restaurant rest;
+  for (int i = 0; i < 21; i++) {
+    getRestaurant(i, &rest);
+    tft.setCursor(0, 15*i); tft.print(rest.name);
+  }
+  highlightRest(position);
 
   while (true) {
     int buttonVal = digitalRead(JOY_SEL);
     int yVal = analogRead(JOY_VERT);
-    bool wasChange = false;
-
-    if (yVal <= 20) {
-      position--;
-      position = constrain(position, 0, 20);
-      wasChange = true;
+    if (yVal == 0 ) {
+      unhighlightRest(position);
+      position -= 15;
+      position = constrain(position, 0, DISPLAY_HEIGHT -20);
+      highlightRest(position);
     }
-    else if (yVal >= 1000) {
-      position++;
-      position = constrain(position, 0, 20);
-      wasChange = true;
-    }
-
-    if (wasChange == true) {
-      for (int16_t i = 0; i < 21; i++) {
-        restaurant rest;
-        getRestaurant(restDistances[i].index, &rest);
-
-        if (i != position) { // Not highlighted
-          tft.setTextColor(0xFFFF, 0x0000);
-        } else { // Highlighted
-          tft.setTextColor(0x0000, 0xFFFF);
-        }
-
-        tft.print(rest.name);
-        tft.print("\n");
-      }
-      tft.print("\n");
+    else if (yVal == 1023 ) {
+      unhighlightRest(position);
+      position += 15;
+      position = constrain(position, 0, DISPLAY_HEIGHT -20);
+      highlightRest(position);
     }
     
     if (buttonVal == LOW) {
@@ -249,9 +251,9 @@ void drawNearRestaurants() {
  * Grabs all the restaurants and sorts them based on proximity to the cursor.
  */
 void sortRestaurants() {
-  restaurant rest; 
+  restaurant rest;
 
-  for (int32_t i = 0; i < NUM_RESTAURANTS; i++) {
+  for (int i = 0; i < NUM_RESTAURANTS; i++) {
     getRestaurant(i, &rest);
 
     int16_t X1 = lon_to_x(rest.lon);
@@ -266,7 +268,12 @@ void sortRestaurants() {
     smallerRest.index = i;
     smallerRest.dist = manhattanDist;
 
+<<<<<<< HEAD
     restDistances[i] = smallerRest;
+=======
+  for (int i = 0; i < 21; i++) {
+    int a = restDistances[i].index;
+>>>>>>> d97eae2fcf5ae77f5c7ee52257ab8543be8df4ad
   }
 
   isort(NUM_RESTAURANTS, restDistances);
