@@ -18,18 +18,53 @@
 #include "lcd_image.h"
 #include <TouchScreen.h>
 
-#include "utilities.h"
-#include "config.h"
-
 MCUFRIEND_kbv tft;
 
-int yegMiddleX = YEG_SIZE/2 - (DISPLAY_WIDTH)/2;
+#define SD_CS 10
+
+#define DISPLAY_WIDTH  480
+#define DISPLAY_HEIGHT 320
+#define YEG_SIZE 2048
+
+#define YP A3
+#define XM A2
+#define YM 9
+#define XP 8
+
+//Map constants
+#define MAP_DISP_WIDTH (DISPLAY_WIDTH )
+#define MAP_DISP_HEIGHT DISPLAY_HEIGHT
+
+#define REST_START_BLOCK 4000000
+#define NUM_RESTAURANTS 1066
+
+//TS constants
+#define TS_MINX 100
+#define TS_MINY 120
+#define TS_MAXX 940
+#define TS_MAXY 920
+
+#define MINPRESSURE   10
+#define MAXPRESSURE 1000
+
+//Cursor constants
+#define CURSOR_SIZE 9
+#define MAX_SPEED 8
+
+//Joystick constants
+#define JOY_VERT  A9 // should connect A9 to pin VRx
+#define JOY_HORIZ A8
+#define JOY_SEL   53
+#define JOY_CENTER   512
+#define JOY_DEADZONE 64
+
+int yegMiddleX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
 int yegMiddleY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
 int cursorX, cursorY;
 
 // the "bounds" of the cursor so that it doesn't go off the map
 int min_X = CURSOR_SIZE/2;
-int max_X = DISPLAY_WIDTH - CURSOR_SIZE/2 - 1;
+int max_X = DISPLAY_WIDTH - CURSOR_SIZE/2 - 61;
 int min_Y = CURSOR_SIZE/2;
 int max_Y = DISPLAY_HEIGHT - CURSOR_SIZE/2 - 1;
 bool listScreen = false;
@@ -39,6 +74,15 @@ lcd_image_t yegImage = {"yeg-big.lcd", YEG_SIZE, YEG_SIZE};
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 Sd2Card card;
+
+
+
+struct restaurant {
+  int32_t lat;
+  int32_t lon;
+  uint8_t rating; // from 0 to 10
+  char name[55];
+};
 
 // restBlock stores the current block in a global variable so
 // that we don't need to read the SD card each time if two entries are in the
@@ -113,8 +157,8 @@ void restaurantListScreen() {
 
 void shiftScreen() {
   lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
-                 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
-  cursorX = (DISPLAY_WIDTH)/2;
+                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
+  cursorX = (DISPLAY_WIDTH)/2 - 60;
   cursorY = DISPLAY_HEIGHT/2;
   redrawCursor(TFT_RED);
 }
@@ -147,8 +191,10 @@ void processJoystick() {
   }
   else if (listScreen == true && buttonVal == LOW) {
     listScreen = false;
+    tft.fillScreen(TFT_BLACK);
+
     lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
-                   0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+                   0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
   }
   else {
@@ -164,27 +210,46 @@ void processJoystick() {
     }
 
     if (cursorX == max_X) {
-      if (yegMiddleX + 2*DISPLAY_WIDTH < YEG_SIZE) {
-        yegMiddleX += DISPLAY_WIDTH;
+      if (yegMiddleX + 2*DISPLAY_WIDTH - 60 < YEG_SIZE) {
+        yegMiddleX += DISPLAY_WIDTH - 60;
         shiftScreen();
 
       }
-    }
-    if (cursorX == min_X) {
-      if (yegMiddleX - DISPLAY_WIDTH > 0) {
-        yegMiddleX -= DISPLAY_WIDTH;
+      else if(yegMiddleX + DISPLAY_WIDTH - 60 < YEG_SIZE) {
+        yegMiddleX += (YEG_SIZE - yegMiddleX - DISPLAY_WIDTH + 60 );
         shiftScreen();
       }
     }
+
+
+    if (cursorX == min_X) {
+      if (yegMiddleX - DISPLAY_WIDTH > 0) {
+        yegMiddleX -= DISPLAY_WIDTH + 60;
+        shiftScreen();
+      }
+      else if(yegMiddleX > 0) {
+        yegMiddleX = 0;
+        shiftScreen();
+      }
+    }
+
     if (cursorY == max_Y) {
       if (yegMiddleY + 2*DISPLAY_HEIGHT < YEG_SIZE) {
         yegMiddleY += DISPLAY_HEIGHT;
+        shiftScreen();
+      }
+      else if (yegMiddleY + DISPLAY_HEIGHT < YEG_SIZE) {
+        yegMiddleY += (YEG_SIZE - yegMiddleY - DISPLAY_HEIGHT);
         shiftScreen();
       }
     }
     if (cursorY == min_Y) {
       if (yegMiddleY - DISPLAY_HEIGHT > 0) {
         yegMiddleY -= DISPLAY_HEIGHT;
+        shiftScreen();
+      }
+      else if (yegMiddleY > 0) {
+        yegMiddleY = 0;
         shiftScreen();
       }
 
@@ -213,6 +278,7 @@ void SDcardInitialization() {
 	Serial.println("OK!");
 }
 
+
 /**
  * Setup function.
  */
@@ -240,10 +306,10 @@ void setup() {
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns
   // black
 	lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
-                 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
 
   // initial cursor position is the middle of the screen
-  cursorX = (DISPLAY_WIDTH)/2;
+  cursorX = (DISPLAY_WIDTH - 60)/2;
   cursorY = DISPLAY_HEIGHT/2;
 
   redrawCursor(TFT_RED);
@@ -318,8 +384,6 @@ void fastTest() {
 void processTouchScreen() {
 	TSPoint touchscreen = ts.getPoint();
 
-  // Restore pinMode to output after reading the touch.
-    // This is necessary to talk to tft display.
 	pinMode(YP, OUTPUT);
 	pinMode(XM, OUTPUT);
 
@@ -344,20 +408,8 @@ void processTouchScreen() {
 int main() {
   setup();
 
-  // Initial variables
-  int screenState = 0; // Initialize at state 0 (aka mode 0)
-  RestDist rest_dist[NUM_RESTAURANTS]; 
-
   while (true) {
-    // Mode 0
-    if (screenState == 0) {
-      processJoystick();
-    }
-    // Mode 1
-    else {
-      // Mode 1 stuff
-    }
-    
+    processJoystick();
   }
 
   Serial.end();
