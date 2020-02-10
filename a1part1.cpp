@@ -226,13 +226,13 @@ void restaurantListScreen() {
     int buttonVal = digitalRead(JOY_SEL);
     int yVal = analogRead(JOY_VERT);
 
-    if (yVal == 0 ) {
+    if (yVal <= 23) {
       unhighlightRest(position);
       position -= 15;
       position = constrain(position, 0, DISPLAY_HEIGHT -20);
       highlightRest(position);
     }
-    else if (yVal == 1023 ) {
+    else if (yVal >= 1000) {
       unhighlightRest(position);
       position += 15;
       position = constrain(position, 0, DISPLAY_HEIGHT -20);
@@ -431,8 +431,6 @@ void processTouchScreen() {
  */
 int main() {
   setup();
-
-  int mode = 0;
 
   while (true) {
     processJoystick();
