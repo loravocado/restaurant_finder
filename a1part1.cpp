@@ -356,19 +356,19 @@ void processJoystick() {
     }
 
     if (CursorPos.X == max_X) {
-      if (MapPos.X + 2*DISPLAY_WIDTH - 60 < YEG_SIZE) {
-        MapPos.X += DISPLAY_WIDTH - 60;
+      if (MapPos.X + 2*MAP_DISP_WIDTH < YEG_SIZE) {
+        MapPos.X += MAP_DISP_WIDTH;
         shiftScreen();
       }
-      else if(MapPos.X + DISPLAY_WIDTH - 60 < YEG_SIZE) {
-        MapPos.X += (YEG_SIZE - MapPos.X - DISPLAY_WIDTH + 60 );
+      else if(MapPos.X + MAP_DISP_WIDTH < YEG_SIZE) {
+        MapPos.X += (YEG_SIZE - MapPos.X - MAP_DISP_WIDTH);
         shiftScreen();
       }
     }
 
     if (CursorPos.X == min_X) {
-      if (MapPos.X - DISPLAY_WIDTH > 0) {
-        MapPos.X -= DISPLAY_WIDTH + 60;
+      if (MapPos.X - MAP_DISP_WIDTH > 0) {
+        MapPos.X -= MAP_DISP_WIDTH;
         shiftScreen();
       }
       else if(MapPos.X > 0) {
