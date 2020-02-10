@@ -118,16 +118,16 @@ void setup() {
   SDcardInitialization();
 
   // initial map position
-  MapPos.X = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
+  MapPos.X = YEG_SIZE/2 - (MAP_DISP_WIDTH)/2;
   MapPos.Y = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
 
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns
   // black
 	lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
-                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
+                 0, 0, MAP_DISP_WIDTH, DISPLAY_HEIGHT);
 
   // initial cursor position is the middle of the screen
-  CursorPos.X = (DISPLAY_WIDTH)/2 - 30;
+  CursorPos.X = MAP_DISP_WIDTH/2;
   CursorPos.Y = DISPLAY_HEIGHT/2;
 
   // draw the cursor in initial position
@@ -147,8 +147,8 @@ void setup() {
  */
 void shiftScreen() {
   lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
-                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
-  CursorPos.X = (DISPLAY_WIDTH)/2 - 30;
+                 0, 0, MAP_DISP_WIDTH, DISPLAY_HEIGHT);
+  CursorPos.X = MAP_DISP_WIDTH/2;
   CursorPos.Y = DISPLAY_HEIGHT/2;
   redrawCursor(TFT_RED);
 }
@@ -353,19 +353,19 @@ void processJoystick() {
     }
 
     if (CursorPos.X == max_X) {
-      if (MapPos.X + 2*DISPLAY_WIDTH - 60 < YEG_SIZE) {
-        MapPos.X += DISPLAY_WIDTH - 60;
+      if (MapPos.X + 2*MAP_DISP_WIDTH < YEG_SIZE) {
+        MapPos.X += MAP_DISP_WIDTH;
         shiftScreen();
       }
-      else if(MapPos.X + DISPLAY_WIDTH - 60 < YEG_SIZE) {
-        MapPos.X += (YEG_SIZE - MapPos.X - DISPLAY_WIDTH + 60 );
+      else if(MapPos.X + MAP_DISP_WIDTH < YEG_SIZE) {
+        MapPos.X += (YEG_SIZE - MapPos.X - MAP_DISP_WIDTH);
         shiftScreen();
       }
     }
 
     if (CursorPos.X == min_X) {
-      if (MapPos.X - DISPLAY_WIDTH > 0) {
-        MapPos.X -= DISPLAY_WIDTH + 60;
+      if (MapPos.X - MAP_DISP_WIDTH > 0) {
+        MapPos.X -= MAP_DISP_WIDTH;
         shiftScreen();
       }
       else if(MapPos.X > 0) {
