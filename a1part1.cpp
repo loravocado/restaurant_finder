@@ -18,15 +18,16 @@
 #include "lcd_image.h"
 #include <TouchScreen.h>
 
+// Support files
 #include "utilities.h"
 #include "config.h"
 
-// the "bounds" of the cursor so that it doesn't go off the map
-const int min_X = CURSOR_SIZE/2;
-const int max_X = DISPLAY_WIDTH - CURSOR_SIZE/2 - 61;
-const int min_Y = CURSOR_SIZE/2;
-const int max_Y = DISPLAY_HEIGHT - CURSOR_SIZE/2 - 1;
+MCUFRIEND_kbv tft;
+lcd_image_t yegImage = {"yeg-big.lcd", YEG_SIZE, YEG_SIZE};
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+Sd2Card card;
 
+// Global variables
 Coord MapPos; // Stores X and Y of current map position
 Coord CursorPos; // Stores X and Y of cursor position relative to screen
 
@@ -36,11 +37,6 @@ restaurant restBlock[8]; // Stores the current block of restaurants
 RestDist restDistances[NUM_RESTAURANTS]; // Stores restaurants based on distance
 
 bool Mode = 0;
-
-MCUFRIEND_kbv tft;
-lcd_image_t yegImage = {"yeg-big.lcd", YEG_SIZE, YEG_SIZE};
-TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
-Sd2Card card;
 
 // Forward declaration for getRestaurant function.
 void getRestaurant(int restIndex, restaurant* restPtr);
@@ -85,7 +81,7 @@ void tftInitialization() {
 }
 
 /**
- * SD card initialization for raw reads.
+ * SD card initialization.
  */
 void SDcardInitialization() {
   Serial.print("Initializing SPI communication for raw reads...");
@@ -165,8 +161,7 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 
   if (blockNum == current_block) {
     *restPtr = restBlock[restIndex % 8];
-  }
-  else {
+  } else {
     while (!card.readBlock(blockNum, (uint8_t*) restBlock)) {
       Serial.print("Read block failed, trying again.");
     }
@@ -180,6 +175,8 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
  * Used for when shifting to restaurants near the edge of the map. Makes sure
  * the cursor is centered on the restaurant while ensuring the screen is not 
  * displaying outside of the bounds of the map.
+ * 
+ * @param rest The restaurant to be snapped to.
  */
 void cursorAndMapConstrain(restaurant rest) {
   MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2, 
@@ -209,24 +206,28 @@ void cursorAndMapConstrain(restaurant rest) {
 /**
  * Unhighlights the restaurant at the given position in the restaurant list
  * menu.
+ * 
+ * @param pos The index of the list item to be unhighlighted.
  */
 void listUnhighlight(int pos) {
   restaurant rest;
-  getRestaurant(restDistances[pos/15].index, &rest);
+  getRestaurant(restDistances[pos].index, &rest);
 
-  tft.setCursor(0, pos);
+  tft.setCursor(0, 15 * pos);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.print(rest.name);
 }
 
 /**
  * Highlights the currently selected restaurant in the restaurant list menu.
+ * 
+ * @param pos The index of the list item to be highlighted.
  */
 void listHighlight(int pos){
   restaurant rest;
-  getRestaurant(restDistances[pos/15].index, &rest);
+  getRestaurant(restDistances[pos].index, &rest);
 
-  tft.setCursor(0, pos);
+  tft.setCursor(0, 15 * pos);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.print(rest.name);
 }
@@ -236,41 +237,45 @@ void listHighlight(int pos){
  * and displays them. The currently focused restaurant is highlighted in white.
  *
  * Pressing the joystick selects the restaurant and moves the cursor there,
- * centering it as well.
+ * centering it as well (centering it as much as possible if a perfect center
+ * is not achievable).
  */
 void restaurantListScreen() {
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-  int position = 0; // Position on the screen in terms of pixels
+  int currentItemIndex = 0; // Index of currently selected item on list
 
   // Grab the 21 closest restaurants
   for (int i = 0; i < 21; i++) {
     restaurant rest;
     getRestaurant(restDistances[i].index, &rest);
-    tft.setCursor(0, 15*i); tft.print(rest.name);
+    tft.setCursor(0, 15 * i); tft.print(rest.name);
   }
-  listHighlight(position);
+
+  listHighlight(currentItemIndex);
 
   while (true) {
     int buttonVal = digitalRead(JOY_SEL);
     int yVal = analogRead(JOY_VERT);
 
-    if (yVal <= 23) {
-      listUnhighlight(position);
-      position = constrain(position - 15, 0, DISPLAY_HEIGHT -20);
-      listHighlight(position);
-    }
-    else if (yVal >= 1000) {
-      listUnhighlight(position);
-      position = constrain(position + 15, 0, DISPLAY_HEIGHT -20);
-      listHighlight(position);
+    if (yVal <= 23 && currentItemIndex != 0) { // Move down the list
+      listUnhighlight(currentItemIndex);
+      currentItemIndex = constrain(currentItemIndex - 1, 0, 20);
+      listHighlight(currentItemIndex);
+    } else if (yVal >= 1000 && currentItemIndex != 20) { // Move up the list
+      listUnhighlight(currentItemIndex);
+      currentItemIndex = constrain(currentItemIndex + 1, 0, 20);
+      listHighlight(currentItemIndex);
     }
 
+    // If the joystick is pressed, we break out of the list menu.
     if (buttonVal == LOW) {
       restaurant rest;
-      getRestaurant(restDistances[position/15].index, &rest);
+      getRestaurant(restDistances[currentItemIndex].index, &rest);
 
+      // Make sure we don't try to render a non-existent part of the map.
+      // Also ensure that the cursor is snapped to the restaurant position.
       cursorAndMapConstrain(rest);
 
       break;
@@ -283,9 +288,8 @@ void restaurantListScreen() {
  * represented by a 3x3 pixel circle.
  */
 void drawNearRestaurants() {
-  restaurant rest;
-
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
+    restaurant rest;
     getRestaurant(i, &rest);
 
     int16_t X = lon_to_x(rest.lon);
@@ -305,9 +309,8 @@ void drawNearRestaurants() {
  * Insertion sort is used to accomplish this.
  */
 void sortRestaurants() {
-  restaurant rest;
-
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
+    restaurant rest;
     getRestaurant(i, &rest);
 
     int16_t X1 = lon_to_x(rest.lon);
@@ -366,9 +369,7 @@ void processJoystick() {
     lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
                    0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
-  }
-  else if (Mode == 0){
-  // check if the joystick is moved
+  } else if (Mode == 0) { // check if the joystick is moved
     if (abs(xVal - JOY_CENTER) > JOY_DEADZONE) {
       CursorPos.X -= MAX_SPEED * (xVal - JOY_CENTER) / (JOY_CENTER);
       CursorPos.X = constrain(CursorPos.X, min_X, max_X);
@@ -383,8 +384,7 @@ void processJoystick() {
       if (MapPos.X + 2*MAP_DISP_WIDTH < YEG_SIZE) {
         MapPos.X += MAP_DISP_WIDTH;
         shiftScreen();
-      }
-      else if(MapPos.X + MAP_DISP_WIDTH < YEG_SIZE) {
+      } else if(MapPos.X + MAP_DISP_WIDTH < YEG_SIZE) {
         MapPos.X += (YEG_SIZE - MapPos.X - MAP_DISP_WIDTH);
         shiftScreen();
       }
@@ -394,8 +394,7 @@ void processJoystick() {
       if (MapPos.X - MAP_DISP_WIDTH > 0) {
         MapPos.X -= MAP_DISP_WIDTH;
         shiftScreen();
-      }
-      else if(MapPos.X > 0) {
+      } else if(MapPos.X > 0) {
         MapPos.X = 0;
         shiftScreen();
       }
@@ -405,8 +404,7 @@ void processJoystick() {
       if (MapPos.Y + 2*DISPLAY_HEIGHT < YEG_SIZE) {
         MapPos.Y += DISPLAY_HEIGHT;
         shiftScreen();
-      }
-      else if (MapPos.Y + DISPLAY_HEIGHT < YEG_SIZE) {
+      } else if (MapPos.Y + DISPLAY_HEIGHT < YEG_SIZE) {
         MapPos.Y += (YEG_SIZE - MapPos.Y - DISPLAY_HEIGHT);
         shiftScreen();
       }

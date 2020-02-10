@@ -37,3 +37,9 @@
 #define JOY_SEL   53
 #define JOY_CENTER   512
 #define JOY_DEADZONE 64
+
+// the "bounds" of the cursor so that it doesn't go off the map
+#define min_X (CURSOR_SIZE/2)
+#define max_X (DISPLAY_WIDTH - CURSOR_SIZE/2 - 61)
+#define min_Y (CURSOR_SIZE/2)
+#define max_Y (DISPLAY_HEIGHT - CURSOR_SIZE/2 - 1)
