@@ -414,8 +414,7 @@ void processJoystick() {
       if (MapPos.Y - DISPLAY_HEIGHT > 0) {
         MapPos.Y -= DISPLAY_HEIGHT;
         shiftScreen();
-      }
-      else if (MapPos.Y > 0) {
+      } else if (MapPos.Y > 0) {
         MapPos.Y = 0;
         shiftScreen();
       }
