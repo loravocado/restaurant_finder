@@ -35,7 +35,7 @@ restaurant restBlock[8]; // Stores the current block of restaurants
 
 RestDist restDistances[NUM_RESTAURANTS]; // Stores restaurants based on distance
 
-bool listScreen = false; // temp
+bool Mode = 0;
 
 MCUFRIEND_kbv tft;
 lcd_image_t yegImage = {"yeg-big.lcd", YEG_SIZE, YEG_SIZE};
@@ -118,17 +118,17 @@ void setup() {
   SDcardInitialization();
 
   // initial map position
-  MapPos.X = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
-  MapPos.Y = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
+  MapPos.X = YEG_SIZE/2 - MAP_DISP_WIDTH/2;
+  MapPos.Y = YEG_SIZE/2 - MAP_DISP_HEIGHT/2;
 
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns
   // black
 	lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
-                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
+                 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
 
   // initial cursor position is the middle of the screen
-  CursorPos.X = (DISPLAY_WIDTH)/2 - 30;
-  CursorPos.Y = DISPLAY_HEIGHT/2;
+  CursorPos.X = MAP_DISP_WIDTH/2;
+  CursorPos.Y = MAP_DISP_HEIGHT/2;
 
   // draw the cursor in initial position
   redrawCursor(TFT_RED);
@@ -147,9 +147,9 @@ void setup() {
  */
 void shiftScreen() {
   lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
-                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
-  CursorPos.X = (DISPLAY_WIDTH)/2 - 30;
-  CursorPos.Y = DISPLAY_HEIGHT/2;
+                 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+  CursorPos.X = MAP_DISP_WIDTH/2;
+  CursorPos.Y = MAP_DISP_HEIGHT/2;
   redrawCursor(TFT_RED);
 }
 
@@ -228,24 +228,27 @@ void restaurantListScreen() {
 
     if (yVal <= 23) {
       unhighlightRest(position);
-      position -= 15;
-      position = constrain(position, 0, DISPLAY_HEIGHT -20);
+      position = constrain(position - 15, 0, DISPLAY_HEIGHT -20);
       highlightRest(position);
     }
     else if (yVal >= 1000) {
       unhighlightRest(position);
-      position += 15;
-      position = constrain(position, 0, DISPLAY_HEIGHT -20);
+      position = constrain(position + 15, 0, DISPLAY_HEIGHT -20);
       highlightRest(position);
     }
 
     if (buttonVal == LOW) {
       restaurant rest;
       getRestaurant(restDistances[position/15].index, &rest);
-      MapPos.X = lon_to_x(rest.lon) - DISPLAY_WIDTH/2 - 30;
-      MapPos.Y = lat_to_y(rest.lat) - DISPLAY_HEIGHT;
-      CursorPos.X = (DISPLAY_WIDTH)/2 - 30;
-      CursorPos.Y = DISPLAY_HEIGHT/2;
+
+      MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2, 
+                            0, YEG_SIZE - MAP_DISP_WIDTH);
+      MapPos.Y = constrain(lat_to_y(rest.lat) - MAP_DISP_HEIGHT/2, 
+                            0, YEG_SIZE - MAP_DISP_WIDTH);
+                            
+      CursorPos.X = MAP_DISP_WIDTH/2;
+      CursorPos.Y = MAP_DISP_HEIGHT/2;
+
       break;
     }
   }
@@ -323,15 +326,16 @@ void processJoystick() {
   int prev_X = CursorPos.X;
   int prev_Y = CursorPos.Y;
 
-  if (listScreen == false && buttonVal == LOW) {
-    listScreen = true;
+  if (Mode == 0 && buttonVal == LOW) {
+    Mode = 1;
 
     tft.fillScreen(TFT_BLACK);
     sortRestaurants();
     restaurantListScreen();
   }
-  if (listScreen == true && buttonVal == LOW) {
-    listScreen = false;
+
+  if (Mode == 1 && buttonVal == LOW) {
+    Mode = 0;
 
     tft.fillScreen(TFT_BLACK);
 
@@ -339,8 +343,7 @@ void processJoystick() {
                    0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
   }
-
-  else if (listScreen == false){
+  else if (Mode == 0){
   // check if the joystick is moved
     if (abs(xVal - JOY_CENTER) > JOY_DEADZONE) {
       CursorPos.X -= MAX_SPEED * (xVal - JOY_CENTER) / (JOY_CENTER);
