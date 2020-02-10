@@ -177,10 +177,40 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 }
 
 /**
+ * Used for when shifting to restaurants near the edge of the map. Makes sure
+ * the cursor is centered on the restaurant while ensuring the screen is not 
+ * displaying outside of the bounds of the map.
+ */
+void cursorAndMapConstrain(restaurant rest) {
+  MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2, 
+                        0, YEG_SIZE - MAP_DISP_WIDTH);
+  MapPos.Y = constrain(lat_to_y(rest.lat) - MAP_DISP_HEIGHT/2, 
+                        0, YEG_SIZE - MAP_DISP_HEIGHT);
+
+  int diffX = 0; 
+  int diffY = 0;
+
+  if (lon_to_x(rest.lon) < MAP_DISP_WIDTH/2) {
+    diffX = MAP_DISP_WIDTH/2 - lon_to_x(rest.lon);
+  } else if (lon_to_x(rest.lon) > YEG_SIZE - MAP_DISP_WIDTH/2) {
+    diffX = -(MAP_DISP_WIDTH/2 - (YEG_SIZE - lon_to_x(rest.lon)));
+  }
+
+  if (lat_to_y(rest.lat) < MAP_DISP_HEIGHT/2) {
+    diffY = MAP_DISP_HEIGHT/2 - lat_to_y(rest.lat);
+  } else if (lat_to_y(rest.lat) > YEG_SIZE - MAP_DISP_HEIGHT/2) {
+    diffY = -(MAP_DISP_HEIGHT/2 - (YEG_SIZE - lat_to_y(rest.lat)));
+  }
+
+  CursorPos.X = MAP_DISP_WIDTH/2 - diffX;
+  CursorPos.Y = MAP_DISP_HEIGHT/2 - diffY;
+}
+
+/**
  * Unhighlights the restaurant at the given position in the restaurant list
  * menu.
  */
-void unhighlightRest(int pos) {
+void listUnhighlight(int pos) {
   restaurant rest;
   getRestaurant(restDistances[pos/15].index, &rest);
 
@@ -192,7 +222,7 @@ void unhighlightRest(int pos) {
 /**
  * Highlights the currently selected restaurant in the restaurant list menu.
  */
-void highlightRest(int pos){
+void listHighlight(int pos){
   restaurant rest;
   getRestaurant(restDistances[pos/15].index, &rest);
 
@@ -220,34 +250,28 @@ void restaurantListScreen() {
     getRestaurant(restDistances[i].index, &rest);
     tft.setCursor(0, 15*i); tft.print(rest.name);
   }
-  highlightRest(position);
+  listHighlight(position);
 
   while (true) {
     int buttonVal = digitalRead(JOY_SEL);
     int yVal = analogRead(JOY_VERT);
 
     if (yVal <= 23) {
-      unhighlightRest(position);
+      listUnhighlight(position);
       position = constrain(position - 15, 0, DISPLAY_HEIGHT -20);
-      highlightRest(position);
+      listHighlight(position);
     }
     else if (yVal >= 1000) {
-      unhighlightRest(position);
+      listUnhighlight(position);
       position = constrain(position + 15, 0, DISPLAY_HEIGHT -20);
-      highlightRest(position);
+      listHighlight(position);
     }
 
     if (buttonVal == LOW) {
       restaurant rest;
       getRestaurant(restDistances[position/15].index, &rest);
 
-      MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2, 
-                            0, YEG_SIZE - MAP_DISP_WIDTH);
-      MapPos.Y = constrain(lat_to_y(rest.lat) - MAP_DISP_HEIGHT/2, 
-                            0, YEG_SIZE - MAP_DISP_WIDTH);
-                            
-      CursorPos.X = MAP_DISP_WIDTH/2;
-      CursorPos.Y = MAP_DISP_HEIGHT/2;
+      cursorAndMapConstrain(rest);
 
       break;
     }
