@@ -426,8 +426,6 @@ void processTouchScreen() {
 int main() {
   setup();
 
-  int mode = 0;
-
   while (true) {
     processJoystick();
     processTouchScreen();
