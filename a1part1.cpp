@@ -177,7 +177,7 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 }
 
 /**
- * Unhighlights the restaurant at the given position in the restaurant list 
+ * Unhighlights the restaurant at the given position in the restaurant list
  * menu.
  */
 void unhighlightRest(int pos) {
@@ -202,9 +202,9 @@ void highlightRest(int pos){
 }
 
 /**
- * Code for the list of restaurants screen. Grabs the 21 closest restaurants 
+ * Code for the list of restaurants screen. Grabs the 21 closest restaurants
  * and displays them. The currently focused restaurant is highlighted in white.
- * 
+ *
  * Pressing the joystick selects the restaurant and moves the cursor there,
  * centering it as well.
  */
@@ -238,8 +238,14 @@ void restaurantListScreen() {
       position = constrain(position, 0, DISPLAY_HEIGHT -20);
       highlightRest(position);
     }
-    
+
     if (buttonVal == LOW) {
+      restaurant rest;
+      getRestaurant(restDistances[position/15].index, &rest);
+      MapPos.X = lon_to_x(rest.lon) - DISPLAY_WIDTH/2 - 30;
+      MapPos.Y = lat_to_y(rest.lat) - DISPLAY_HEIGHT;
+      CursorPos.X = (DISPLAY_WIDTH)/2 - 30;
+      CursorPos.Y = DISPLAY_HEIGHT/2;
       break;
     }
   }
@@ -268,7 +274,7 @@ void drawNearRestaurants() {
 }
 
 /**
- * Grabs all the restaurants and sorts them based on proximity to the cursor. 
+ * Grabs all the restaurants and sorts them based on proximity to the cursor.
  * Insertion sort is used to accomplish this.
  */
 void sortRestaurants() {
