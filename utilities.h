@@ -80,3 +80,12 @@ int32_t y_to_lat(int16_t y) {
 int32_t ManhattanDist(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
   return abs(x1 - x2) + abs(y1 - y2);
 }
+
+/**
+ * Computes the rating from range [1, 5] given the rating from range [0, 10].
+ *
+ * @param rating The rating
+ */
+uint16_t ratingConverter(uint16_t rating) {
+  return max(floor((rating+1) / 2), 1);
+}

@@ -456,6 +456,8 @@ void processTouchScreen() {
 int main() {
   setup();
 
+  Serial.println(ratingConverter(7.6));
+
   while (true) {
     processJoystick();
     processTouchScreen();
