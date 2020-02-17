@@ -37,8 +37,10 @@ restaurant restBlock[8]; // Stores the current block of restaurants
 RestDist restDistances[NUM_RESTAURANTS]; // Stores restaurants based on distance
 
 bool Mode = 0;
-
+sortState sort = QSORT;
 int currentRating = 1;
+
+
 
 // Forward declaration for getRestaurant function.
 void getRestaurant(int restIndex, restaurant* restPtr);
@@ -121,8 +123,8 @@ void setup() {
 
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns
   // black
-	//lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
-  //               0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+	lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
+                0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
 
   // initial cursor position is the middle of the screen
   CursorPos.X = MAP_DISP_WIDTH/2;
@@ -169,25 +171,58 @@ void shiftScreen() {
   redrawCursor(TFT_RED);
 }
 
+
+void printCurrentRating() {
+  tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10, 10, 20, TFT_WHITE);
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
+}
+
 /**
  * Cycles through ratings
  */
 void cycleRatings() {
+  tft.setTextColor(TFT_GREEN);
   if (currentRating < 5) {
     currentRating++;
   }
   else {
     currentRating = 1;
   }
+  printCurrentRating();
+  delay(700);
 }
 
-void printCurrentRating() {
-
-  tft.setTextColor(TFT_GREEN);
-  tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10, 10, 20, TFT_WHITE);
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
-
+void cycleSorts() {
+  tft.setTextColor(TFT_BLUE);
+  if (sort == QSORT) {
+    sort = ISORT;
+    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("I");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
+  }
+  else if (sort == ISORT) {
+    sort = BOTH;
+    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 30); tft.print("B");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 10); tft.print("O");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 10); tft.print("T");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 30); tft.print("H");
+  }
+  else if (sort == BOTH) {
+    sort = QSORT;
+    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("Q");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
+  }
+  delay(700);
 }
+
 /**
  * Fast implementation of getting restaurants.
  *
@@ -272,9 +307,9 @@ void listHighlight(int pos) {
 }
 
 /**
- * 
- * 
- * @param 
+ *
+ *
+ * @param
  */
 void listShift(int pos, int shift) {
   tft.fillScreen(TFT_BLACK);
@@ -287,7 +322,7 @@ void listShift(int pos, int shift) {
     // check that we don't go past the maximum index
     newPos = min(pos + shift, NUM_RESTAURANTS - 1);
   }
-  
+
   // Grab the 21 required restaurants
   for (int i = 0; i < 21; i++) {
     tft.setCursor(0, 15 * i);
@@ -297,8 +332,8 @@ void listShift(int pos, int shift) {
       getRestaurant(restDistances[i + newPos].index, &rest);
       tft.print(rest.name);
     }
-    
-  } 
+
+  }
 }
 
 /**
@@ -396,7 +431,7 @@ void sortRestaurants() {
 
     restDistances[i] = smallerRest;
   }
-  
+
   qsort(restDistances);
   //isort(NUM_RESTAURANTS, restDistances);
 }
@@ -514,9 +549,17 @@ void processTouchScreen() {
 	}
 
   int16_t X = map(touchscreen.y, TS_MINX, TS_MAXX, DISPLAY_WIDTH-1, 0);
+  int16_t Y = map(touchscreen.x, TS_MINY, TS_MAXY, DISPLAY_HEIGHT-1, 0);
 
   if (X < MAP_DISP_WIDTH) {
     drawNearRestaurants();
+  }
+
+  if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT/2 && Y > 0) {
+    cycleRatings();
+  }
+  if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT && Y > DISPLAY_HEIGHT/2) {
+    cycleSorts();
   }
 }
 
