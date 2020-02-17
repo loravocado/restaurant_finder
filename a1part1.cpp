@@ -119,8 +119,8 @@ void setup() {
 
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns
   // black
-	lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
-                 0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+	//lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
+  //               0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
 
   // initial cursor position is the middle of the screen
   CursorPos.X = MAP_DISP_WIDTH/2;
@@ -223,13 +223,43 @@ void listUnhighlight(int pos) {
  * 
  * @param pos The index of the list item to be highlighted.
  */
-void listHighlight(int pos){
+void listHighlight(int pos) {
   restaurant rest;
   getRestaurant(restDistances[pos].index, &rest);
 
   tft.setCursor(0, 15 * pos);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
   tft.print(rest.name);
+}
+
+/**
+ * 
+ * 
+ * @param 
+ */
+void listShift(int pos, int shift) {
+  tft.fillScreen(TFT_BLACK);
+  int newPos;
+
+  if (shift < 0) { // shift in the negative (up) direction.
+    // check that we don't go into a negative index.
+    newPos = max(pos + shift, 0);
+  } else { // shift in the positive (down) direction.
+    // check that we don't go past the maximum index
+    newPos = min(pos + shift, NUM_RESTAURANTS - 1);
+  }
+  
+  // Grab the 21 required restaurants
+  for (int i = 0; i < 21; i++) {
+    tft.setCursor(0, 15 * i);
+    restaurant rest;
+
+    if ((i + newPos) < NUM_RESTAURANTS) {
+      getRestaurant(restDistances[i + newPos].index, &rest);
+      tft.print(rest.name);
+    }
+    
+  } 
 }
 
 /**
@@ -244,7 +274,7 @@ void restaurantListScreen() {
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-  int currentItemIndex = 0; // Index of currently selected item on list
+  int currentItemIndex = 0; // relative index of currently selected item on list
 
   // Grab the 21 closest restaurants
   for (int i = 0; i < 21; i++) {
@@ -327,8 +357,9 @@ void sortRestaurants() {
 
     restDistances[i] = smallerRest;
   }
-
-  isort(NUM_RESTAURANTS, restDistances);
+  
+  qsort(restDistances);
+  //isort(NUM_RESTAURANTS, restDistances);
 }
 
 /**
@@ -455,8 +486,6 @@ void processTouchScreen() {
  */
 int main() {
   setup();
-
-  Serial.println(ratingConverter(7.6));
 
   while (true) {
     processJoystick();

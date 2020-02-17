@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 
+#include "config.h"
+
 // These constants are for the 2048 by 2048 map .
 #define MAP_WIDTH 2048
 #define MAP_HEIGHT 2048
@@ -9,6 +11,8 @@
 #define LAT_SOUTH 5340953l
 #define LON_WEST -11368652l
 #define LON_EAST -11333496l
+
+enum sortState { QSORT, ISORT, BOTH };
 
 struct restaurant {
   int32_t lat;
@@ -28,6 +32,18 @@ struct Coord {
 };
 
 /**
+ * Swap function for two restaurants. Swaps the two input restaurants.
+ *
+ * @param a Restaurant 1.
+ * @param b Restaurant 2.
+ */
+void swapRestaurants(RestDist* a, RestDist* b) {
+  RestDist temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
+/**
  * Insertion sort. Sorts restaurants based on Manhattan distance.
  *
  * @param n Length of the array.
@@ -40,14 +56,52 @@ void isort(int n, RestDist A[]) {
     int j = i;
 
     while (j > 0 && A[j - 1].dist > A[j].dist) {
-      RestDist temp = A[j - 1];
-      A[j - 1] = A[j];
-      A[j] = temp;
-
+      swapRestaurants(&A[j - 1], &A[j]);
       j--;
     }
 
     i++;
+  }
+}
+
+/**
+ * Partition function.
+ * 
+ * With last element as pivot, we place other smaller elements to the left of 
+ * the piviot and larger elements to the right of the pivot. 
+ *
+ * @param A The array to partition.
+ * @param low The starting index.
+ * @param high The ending index.
+ */
+int partition (RestDist A[], int low, int high) {
+  int pivot = A[high].dist;
+  int j = (low - 1);
+
+  for (int i = low; i < high; i++) {
+    if (A[i].dist < pivot) {
+      j++;
+      swapRestaurants(&A[i], &A[j]);
+    }
+  }
+
+  swapRestaurants(&A[j + 1], &A[high]);
+  return (j + 1);
+}
+
+/**
+ * Quick sort. Sorts restaurants based on Manhattan distance.
+ *
+ * @param A The array to sort.
+ * @param low The starting index.
+ * @param high The ending index.
+ */
+void qsort(RestDist A[], int low = 0, int high = NUM_RESTAURANTS - 1) {
+  if (low < high) {
+    int part = partition(A, low, high);
+
+    qsort(A, low, part - 1);
+    qsort(A, part + 1, high);
   }
 }
 
