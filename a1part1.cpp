@@ -517,7 +517,7 @@ void sortRestaurants() {
 
   if (sort == QSORT) {
     Serial.print("qsort "); 
-    qsort(restDistances, 0, numRestaurants);
+    qsort(restDistances, 0, numRestaurants - 1);
   } else if (sort == ISORT) {
     Serial.print("isort ");
     isort(numRestaurants, restDistances);

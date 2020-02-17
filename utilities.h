@@ -80,7 +80,7 @@ int32_t partition (RestDist A[], int low, int high) {
   int32_t pivot = A[high].dist;
   int32_t j = (low - 1);
 
-  for (int i = low; i < high; i++) {
+  for (int i = low; i <= high - 1; i++) {
     if (A[i].dist < pivot) {
       j++;
       swapRestaurants(&A[i], &A[j]);
@@ -98,7 +98,7 @@ int32_t partition (RestDist A[], int low, int high) {
  * @param low The starting index.
  * @param high The ending index.
  */
-void qsort(RestDist A[], int low = 0, int high = NUM_RESTAURANTS) {
+void qsort(RestDist A[], int low = 0, int high = NUM_RESTAURANTS - 1) {
   if (low < high) {
     int32_t part = partition(A, low, high);
 
