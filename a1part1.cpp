@@ -34,6 +34,8 @@ Coord CursorPos; // Stores X and Y of cursor position relative to screen
 uint32_t current_block = REST_START_BLOCK; // Stores the current block number
 restaurant restBlock[8]; // Stores the current block of restaurants
 
+int32_t listPos = 0; // Stores the current position in the restaurant 
+                                //distance array
 RestDist restDistances[NUM_RESTAURANTS]; // Stores restaurants based on distance
 
 bool Mode = 0;
@@ -211,7 +213,7 @@ void cursorAndMapConstrain(restaurant rest) {
  */
 void listUnhighlight(int pos) {
   restaurant rest;
-  getRestaurant(restDistances[pos].index, &rest);
+  getRestaurant(restDistances[listPos + pos].index, &rest);
 
   tft.setCursor(0, 15 * pos);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
@@ -225,7 +227,7 @@ void listUnhighlight(int pos) {
  */
 void listHighlight(int pos) {
   restaurant rest;
-  getRestaurant(restDistances[pos].index, &rest);
+  getRestaurant(restDistances[listPos + pos].index, &rest);
 
   tft.setCursor(0, 15 * pos);
   tft.setTextColor(TFT_BLACK, TFT_WHITE);
@@ -233,33 +235,48 @@ void listHighlight(int pos) {
 }
 
 /**
+ * Shifts the list up or down `shift' number of places. Ensures that the list
+ * doesn't scroll past the start or end as well.
  * 
- * 
- * @param 
+ * @param shift The amount to shift the list by (negative ==> shift up).
+ *
+ * @returns Whether or not there was a shift.
  */
-void listShift(int pos, int shift) {
-  tft.fillScreen(TFT_BLACK);
-  int newPos;
+bool listShift(int shift) {
+  int32_t next_pos;
 
   if (shift < 0) { // shift in the negative (up) direction.
     // check that we don't go into a negative index.
-    newPos = max(pos + shift, 0);
+    next_pos = max(listPos + shift, 0);
   } else { // shift in the positive (down) direction.
     // check that we don't go past the maximum index
-    newPos = min(pos + shift, NUM_RESTAURANTS - 1);
+    next_pos = min(listPos + shift, NUM_RESTAURANTS - 1);
   }
-  
-  // Grab the 21 required restaurants
-  for (int i = 0; i < 21; i++) {
-    tft.setCursor(0, 15 * i);
-    restaurant rest;
 
-    if ((i + newPos) < NUM_RESTAURANTS) {
-      getRestaurant(restDistances[i + newPos].index, &rest);
-      tft.print(rest.name);
-    }
+  if (next_pos != listPos) {
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+    listPos = next_pos;
+
+    // Grab the 21 required restaurants
+    for (int i = 0; i < 21; i++) {
+      tft.setCursor(0, 15 * i);
     
-  } 
+      if ((i + listPos) < NUM_RESTAURANTS) {
+        restaurant rest;
+        getRestaurant(restDistances[i + listPos].index, &rest);
+        tft.print(rest.name);
+      } else {
+        break;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -274,12 +291,13 @@ void restaurantListScreen() {
   tft.setTextSize(2);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
+  listPos = 0; // reset initial list position
   int currentItemIndex = 0; // relative index of currently selected item on list
 
   // Grab the 21 closest restaurants
   for (int i = 0; i < 21; i++) {
     restaurant rest;
-    getRestaurant(restDistances[i].index, &rest);
+    getRestaurant(restDistances[i + listPos].index, &rest);
     tft.setCursor(0, 15 * i); tft.print(rest.name);
   }
 
@@ -289,20 +307,42 @@ void restaurantListScreen() {
     int buttonVal = digitalRead(JOY_SEL);
     int yVal = analogRead(JOY_VERT);
 
-    if (yVal <= 23 && currentItemIndex != 0) { // Move down the list
-      listUnhighlight(currentItemIndex);
-      currentItemIndex = constrain(currentItemIndex - 1, 0, 20);
-      listHighlight(currentItemIndex);
-    } else if (yVal >= 1000 && currentItemIndex != 20) { // Move up the list
-      listUnhighlight(currentItemIndex);
-      currentItemIndex = constrain(currentItemIndex + 1, 0, 20);
-      listHighlight(currentItemIndex);
+    if (yVal <= 23) { // Move up the list
+      if (currentItemIndex == 0) {
+        bool wasChange = listShift(-21);
+
+        if (wasChange) {
+          currentItemIndex = 20;
+          listHighlight(currentItemIndex);
+        }
+      } else if (listPos + currentItemIndex - 1 >= 0) {
+        listUnhighlight(currentItemIndex);
+        currentItemIndex -= 1;
+        listHighlight(currentItemIndex);
+      } 
+
+      Serial.println(listPos + currentItemIndex);
+    } else if (yVal >= 1000) { // Move down the list
+      if (currentItemIndex == 20) {
+        bool wasChange = listShift(21);
+
+        if (wasChange) {
+          currentItemIndex = 0;
+          listHighlight(currentItemIndex);
+        }
+      } else if (listPos + currentItemIndex + 1 < NUM_RESTAURANTS) {
+        listUnhighlight(currentItemIndex);
+        currentItemIndex += 1;
+        listHighlight(currentItemIndex);
+      }  
+
+      Serial.println(listPos + currentItemIndex); 
     }
 
     // If the joystick is pressed, we break out of the list menu.
     if (buttonVal == LOW) {
       restaurant rest;
-      getRestaurant(restDistances[currentItemIndex].index, &rest);
+      getRestaurant(restDistances[listPos + currentItemIndex].index, &rest);
 
       // Make sure we don't try to render a non-existent part of the map.
       // Also ensure that the cursor is snapped to the restaurant position.

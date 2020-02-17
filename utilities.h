@@ -73,6 +73,8 @@ void isort(int n, RestDist A[]) {
  * @param A The array to partition.
  * @param low The starting index.
  * @param high The ending index.
+ * 
+ * @returns 
  */
 int partition (RestDist A[], int low, int high) {
   int pivot = A[high].dist;
