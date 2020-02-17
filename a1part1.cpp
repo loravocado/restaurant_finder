@@ -309,18 +309,12 @@ void listHighlight(int pos) {
 }
 
 /**
-<<<<<<< HEAD
  * Shifts the list up or down `shift' number of places. Ensures that the list
  * doesn't scroll past the start or end as well.
  * 
  * @param shift The amount to shift the list by (negative ==> shift up).
  *
  * @returns Whether or not there was a shift.
-=======
- *
- *
- * @param
->>>>>>> 7d26f598248edeed2d10fe419dbc8f71669f6a52
  */
 bool listShift(int shift) {
   int32_t next_pos;
@@ -332,7 +326,6 @@ bool listShift(int shift) {
     // check that we don't go past the maximum index
     next_pos = min(listPos + shift, NUM_RESTAURANTS - 1);
   }
-<<<<<<< HEAD
 
   if (next_pos != listPos) {
     tft.fillScreen(TFT_BLACK);
@@ -358,20 +351,6 @@ bool listShift(int shift) {
   }
 
   return false;
-=======
-
-  // Grab the 21 required restaurants
-  for (int i = 0; i < 21; i++) {
-    tft.setCursor(0, 15 * i);
-    restaurant rest;
-
-    if ((i + newPos) < NUM_RESTAURANTS) {
-      getRestaurant(restDistances[i + newPos].index, &rest);
-      tft.print(rest.name);
-    }
-
-  }
->>>>>>> 7d26f598248edeed2d10fe419dbc8f71669f6a52
 }
 
 /**
@@ -415,8 +394,6 @@ void restaurantListScreen() {
         currentItemIndex -= 1;
         listHighlight(currentItemIndex);
       } 
-
-      Serial.println(listPos + currentItemIndex);
     } else if (yVal >= 1000) { // Move down the list
       if (currentItemIndex == 20) {
         bool wasChange = listShift(21);
@@ -430,8 +407,6 @@ void restaurantListScreen() {
         currentItemIndex += 1;
         listHighlight(currentItemIndex);
       }  
-
-      Serial.println(listPos + currentItemIndex); 
     }
 
     // If the joystick is pressed, we break out of the list menu.
