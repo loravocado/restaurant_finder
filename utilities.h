@@ -76,9 +76,9 @@ void isort(int n, RestDist A[]) {
  * 
  * @returns 
  */
-int partition (RestDist A[], int low, int high) {
-  int pivot = A[high].dist;
-  int j = (low - 1);
+int32_t partition (RestDist A[], int low, int high) {
+  int32_t pivot = A[high].dist;
+  int32_t j = (low - 1);
 
   for (int i = low; i < high; i++) {
     if (A[i].dist < pivot) {
@@ -98,9 +98,9 @@ int partition (RestDist A[], int low, int high) {
  * @param low The starting index.
  * @param high The ending index.
  */
-void qsort(RestDist A[], int low = 0, int high = NUM_RESTAURANTS - 1) {
+void qsort(RestDist A[], int low = 0, int high = NUM_RESTAURANTS) {
   if (low < high) {
-    int part = partition(A, low, high);
+    int32_t part = partition(A, low, high);
 
     qsort(A, low, part - 1);
     qsort(A, part + 1, high);

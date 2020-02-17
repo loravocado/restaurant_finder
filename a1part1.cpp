@@ -42,8 +42,6 @@ bool Mode = 0;
 sortState sort = QSORT;
 int currentRating = 1;
 
-
-
 // Forward declaration for getRestaurant function.
 void getRestaurant(int restIndex, restaurant* restPtr);
 
@@ -66,10 +64,111 @@ void redrawCursor(uint16_t color) {
  * @param prev_Y Y coordinate to redraw the map at
  */
 void redrawMap(int prev_X, int prev_Y) {
-  lcd_image_draw(&yegImage, &tft, MapPos.X + prev_X - CURSOR_SIZE/2 ,
+  lcd_image_draw(&yegImage, &tft, MapPos.X + prev_X - CURSOR_SIZE/2,
                  MapPos.Y + prev_Y - CURSOR_SIZE/2,
                  prev_X - CURSOR_SIZE/2, prev_Y - CURSOR_SIZE/2,
                  CURSOR_SIZE, CURSOR_SIZE);
+}
+
+/**
+ * Draws the top right button for selecting rating.
+ */
+void ratingSelectorButton() {
+  // Background rectangle
+  tft.fillRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT/2, 
+                TFT_WHITE);
+  tft.drawRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT/2, 
+                TFT_GREEN);
+
+  // Text
+  tft.setTextColor(TFT_GREEN);
+  tft.setCursor(button1X, button1Y); tft.print(currentRating);
+}
+
+/**
+ * Draws text for "QSORT"
+ */
+void qsort_text() {
+  tft.setCursor(button2X, button2Y - 40); tft.print("Q");
+  tft.setCursor(button2X, button2Y - 20); tft.print("S");
+  tft.setCursor(button2X, button2Y); tft.print("O");
+  tft.setCursor(button2X, button2Y + 20); tft.print("R");
+  tft.setCursor(button2X, button2Y + 40); tft.print("T");
+}
+
+/**
+ * Draws text for "ISORT"
+ */
+void isort_text() {
+  tft.setCursor(button2X, button2Y - 40); tft.print("I");
+  tft.setCursor(button2X, button2Y - 20); tft.print("S");
+  tft.setCursor(button2X, button2Y); tft.print("O");
+  tft.setCursor(button2X, button2Y + 20); tft.print("R");
+  tft.setCursor(button2X, button2Y + 40); tft.print("T");
+}
+
+/**
+ * Draws text for "BOTH"
+ */
+void both_text() {
+  tft.setCursor(button2X, button2Y - 30); tft.print("B");
+  tft.setCursor(button2X, button2Y - 10); tft.print("O");
+  tft.setCursor(button2X, button2Y + 10); tft.print("T");
+  tft.setCursor(button2X, button2Y + 30); tft.print("H");
+}
+
+/**
+ * Draws the bottom right button for selecting sort type.
+ * 
+ * @param sortType The type of sort selected.
+ */
+void sortSelectorButton(sortState sortType = QSORT) {
+  // Background rectangle
+  tft.fillRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, 
+                MENU_BUTTON_HEIGHT/2, TFT_WHITE);
+  tft.drawRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, 
+                MENU_BUTTON_HEIGHT/2, TFT_BLUE);
+
+  // Text
+  tft.setTextColor(TFT_BLUE);
+  
+  if (sort == QSORT) {
+    qsort_text(); 
+  } else if (sort == ISORT) {
+    isort_text();    
+  } else if (sort == BOTH) {
+    both_text();   
+  }
+}
+
+/**
+ * Cycles through ratings.
+ */
+void cycleRatings() {
+  if (currentRating < 5) {
+    currentRating++;
+  } else {
+    currentRating = 1;
+  }
+
+  ratingSelectorButton();
+  delay(500);
+}
+
+/**
+ * Cycles through sort type.
+ */
+void cycleSorts() {
+  if (sort == QSORT) {
+    sort = ISORT; 
+  } else if (sort == ISORT) {
+    sort = BOTH;    
+  } else if (sort == BOTH) {
+    sort = QSORT;   
+  }
+
+  sortSelectorButton(sort);
+  delay(500);
 }
 
 /*
@@ -119,6 +218,10 @@ void setup() {
   tftInitialization();
   SDcardInitialization();
 
+  // Draw the buttons for selecting the rating and sort type
+  ratingSelectorButton();
+  sortSelectorButton();
+
   // initial map position
   MapPos.X = YEG_SIZE/2 - MAP_DISP_WIDTH/2;
   MapPos.Y = YEG_SIZE/2 - MAP_DISP_HEIGHT/2;
@@ -142,24 +245,6 @@ void setup() {
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
     getRestaurant(i, &rest);
   }
-  tft.fillRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_WHITE);
-  tft.drawRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_GREEN);
-
-  tft.fillRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_WHITE);
-  tft.drawRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_BLUE);
-
-  tft.setTextSize(2);
-
-  tft.setTextColor(TFT_GREEN);
-
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
-  tft.setTextColor(TFT_BLUE);
-
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("Q");
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
 }
 
 /**
@@ -171,58 +256,6 @@ void shiftScreen() {
   CursorPos.X = MAP_DISP_WIDTH/2;
   CursorPos.Y = MAP_DISP_HEIGHT/2;
   redrawCursor(TFT_RED);
-}
-
-
-void printCurrentRating() {
-  tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10, 10, 20, TFT_WHITE);
-  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
-}
-
-/**
- * Cycles through ratings
- */
-void cycleRatings() {
-  tft.setTextColor(TFT_GREEN);
-  if (currentRating < 5) {
-    currentRating++;
-  }
-  else {
-    currentRating = 1;
-  }
-  printCurrentRating();
-  delay(700);
-}
-
-void cycleSorts() {
-  tft.setTextColor(TFT_BLUE);
-  if (sort == QSORT) {
-    sort = ISORT;
-    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("I");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
-  }
-  else if (sort == ISORT) {
-    sort = BOTH;
-    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 30); tft.print("B");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 10); tft.print("O");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 10); tft.print("T");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 30); tft.print("H");
-  }
-  else if (sort == BOTH) {
-    sort = QSORT;
-    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("Q");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
-    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
-  }
-  delay(700);
 }
 
 /**
@@ -449,27 +482,56 @@ void drawNearRestaurants() {
  * Insertion sort is used to accomplish this.
  */
 void sortRestaurants() {
+  int numRestaurants = 0;
+  int emptyIndexes = 0;
+
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
     restaurant rest;
     getRestaurant(i, &rest);
 
-    int16_t X1 = lon_to_x(rest.lon);
-    int16_t Y1 = lat_to_y(rest.lat);
+    int rating = ratingConverter(rest.rating);
 
-    int16_t X2 = MapPos.X + CursorPos.X;
-    int16_t Y2 = MapPos.Y + CursorPos.Y;
+    if (rating >= currentRating) {
+      numRestaurants++;
 
-    int32_t manhattanDist = ManhattanDist(X1, Y1, X2, Y2);
+      int16_t X1 = lon_to_x(rest.lon);
+      int16_t Y1 = lat_to_y(rest.lat);
 
-    RestDist smallerRest;
-    smallerRest.index = i;
-    smallerRest.dist = manhattanDist;
+      int16_t X2 = MapPos.X + CursorPos.X;
+      int16_t Y2 = MapPos.Y + CursorPos.Y;
 
-    restDistances[i] = smallerRest;
+      int32_t manhattanDist = ManhattanDist(X1, Y1, X2, Y2);
+
+      RestDist smallerRest;
+      smallerRest.index = i;
+      smallerRest.dist = manhattanDist;
+
+      restDistances[i - emptyIndexes] = smallerRest;
+    } else {
+      emptyIndexes++;
+    }
   }
 
-  qsort(restDistances);
-  //isort(NUM_RESTAURANTS, restDistances);
+  // sort restaurants and time how long it takes
+  int32_t start = millis();
+
+  if (sort == QSORT) {
+    Serial.print("qsort "); 
+    qsort(restDistances, 0, numRestaurants);
+  } else if (sort == ISORT) {
+    Serial.print("isort ");
+    isort(numRestaurants, restDistances);
+  } else { // Both tests
+    isort(numRestaurants, restDistances);
+    //qsort(restDistances, 0, numRestaurants);
+  }
+  
+  int32_t end = millis();
+
+  Serial.print(numRestaurants); 
+  Serial.print(" restaurants: ");
+  Serial.print(end - start); 
+  Serial.println(" ms");
 }
 
 /**
@@ -507,6 +569,11 @@ void processJoystick() {
 
     tft.fillScreen(TFT_BLACK);
 
+    // Draw the buttons for selecting the rating and sort type
+    ratingSelectorButton();
+    sortSelectorButton();
+
+    // Redraw the map and cursor
     lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
                    0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
@@ -587,13 +654,17 @@ void processTouchScreen() {
   int16_t X = map(touchscreen.y, TS_MINX, TS_MAXX, DISPLAY_WIDTH-1, 0);
   int16_t Y = map(touchscreen.x, TS_MINY, TS_MAXY, DISPLAY_HEIGHT-1, 0);
 
+  // Draw nearby restaurants as blue dots
   if (X < MAP_DISP_WIDTH) {
     drawNearRestaurants();
   }
 
+  // Cycle rating
   if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT/2 && Y > 0) {
     cycleRatings();
   }
+
+  // Cycle sort type
   if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT && Y > DISPLAY_HEIGHT/2) {
     cycleSorts();
   }

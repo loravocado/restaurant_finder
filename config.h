@@ -47,3 +47,9 @@
 #define max_X (DISPLAY_WIDTH - CURSOR_SIZE/2 - 61)
 #define min_Y (CURSOR_SIZE/2)
 #define max_Y (DISPLAY_HEIGHT - CURSOR_SIZE/2 - 1)
+
+// Positions to write to the side buttons
+#define button1X (MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5)
+#define button1Y (MENU_BUTTON_HEIGHT/4 - 10)
+#define button2X (MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5)
+#define button2Y (MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4)
