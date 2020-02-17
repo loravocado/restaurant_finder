@@ -38,6 +38,8 @@ RestDist restDistances[NUM_RESTAURANTS]; // Stores restaurants based on distance
 
 bool Mode = 0;
 
+int currentRating = 1;
+
 // Forward declaration for getRestaurant function.
 void getRestaurant(int restIndex, restaurant* restPtr);
 
@@ -136,6 +138,24 @@ void setup() {
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
     getRestaurant(i, &rest);
   }
+  tft.fillRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_WHITE);
+  tft.drawRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_GREEN);
+
+  tft.fillRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_WHITE);
+  tft.drawRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_BLUE);
+
+  tft.setTextSize(2);
+
+  tft.setTextColor(TFT_GREEN);
+
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
+  tft.setTextColor(TFT_BLUE);
+
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("Q");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
 }
 
 /**
@@ -149,6 +169,25 @@ void shiftScreen() {
   redrawCursor(TFT_RED);
 }
 
+/**
+ * Cycles through ratings
+ */
+void cycleRatings() {
+  if (currentRating < 5) {
+    currentRating++;
+  }
+  else {
+    currentRating = 1;
+  }
+}
+
+void printCurrentRating() {
+
+  tft.setTextColor(TFT_GREEN);
+  tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10, 10, 20, TFT_WHITE);
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
+
+}
 /**
  * Fast implementation of getting restaurants.
  *
@@ -173,18 +212,18 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 
 /**
  * Used for when shifting to restaurants near the edge of the map. Makes sure
- * the cursor is centered on the restaurant while ensuring the screen is not 
+ * the cursor is centered on the restaurant while ensuring the screen is not
  * displaying outside of the bounds of the map.
- * 
+ *
  * @param rest The restaurant to be snapped to.
  */
 void cursorAndMapConstrain(restaurant rest) {
-  MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2, 
+  MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2,
                         0, YEG_SIZE - MAP_DISP_WIDTH);
-  MapPos.Y = constrain(lat_to_y(rest.lat) - MAP_DISP_HEIGHT/2, 
+  MapPos.Y = constrain(lat_to_y(rest.lat) - MAP_DISP_HEIGHT/2,
                         0, YEG_SIZE - MAP_DISP_HEIGHT);
 
-  int diffX = 0; 
+  int diffX = 0;
   int diffY = 0;
 
   if (lon_to_x(rest.lon) < MAP_DISP_WIDTH/2) {
@@ -206,7 +245,7 @@ void cursorAndMapConstrain(restaurant rest) {
 /**
  * Unhighlights the restaurant at the given position in the restaurant list
  * menu.
- * 
+ *
  * @param pos The index of the list item to be unhighlighted.
  */
 void listUnhighlight(int pos) {
@@ -220,7 +259,7 @@ void listUnhighlight(int pos) {
 
 /**
  * Highlights the currently selected restaurant in the restaurant list menu.
- * 
+ *
  * @param pos The index of the list item to be highlighted.
  */
 void listHighlight(int pos){
