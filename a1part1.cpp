@@ -39,6 +39,10 @@ int32_t listPos = 0; // Stores the current position in the restaurant
 RestDist restDistances[NUM_RESTAURANTS]; // Stores restaurants based on distance
 
 bool Mode = 0;
+sortState sort = QSORT;
+int currentRating = 1;
+
+
 
 // Forward declaration for getRestaurant function.
 void getRestaurant(int restIndex, restaurant* restPtr);
@@ -121,8 +125,8 @@ void setup() {
 
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns
   // black
-	//lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
-  //               0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
+	lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
+                0, 0, MAP_DISP_WIDTH, MAP_DISP_HEIGHT);
 
   // initial cursor position is the middle of the screen
   CursorPos.X = MAP_DISP_WIDTH/2;
@@ -138,6 +142,24 @@ void setup() {
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
     getRestaurant(i, &rest);
   }
+  tft.fillRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_WHITE);
+  tft.drawRect(MAP_DISP_WIDTH + 1, 0, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_GREEN);
+
+  tft.fillRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_WHITE);
+  tft.drawRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, MENU_BUTTON_HEIGHT, TFT_BLUE);
+
+  tft.setTextSize(2);
+
+  tft.setTextColor(TFT_GREEN);
+
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
+  tft.setTextColor(TFT_BLUE);
+
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("Q");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
 }
 
 /**
@@ -149,6 +171,58 @@ void shiftScreen() {
   CursorPos.X = MAP_DISP_WIDTH/2;
   CursorPos.Y = MAP_DISP_HEIGHT/2;
   redrawCursor(TFT_RED);
+}
+
+
+void printCurrentRating() {
+  tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10, 10, 20, TFT_WHITE);
+  tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/4 - 10); tft.print(currentRating);
+}
+
+/**
+ * Cycles through ratings
+ */
+void cycleRatings() {
+  tft.setTextColor(TFT_GREEN);
+  if (currentRating < 5) {
+    currentRating++;
+  }
+  else {
+    currentRating = 1;
+  }
+  printCurrentRating();
+  delay(700);
+}
+
+void cycleSorts() {
+  tft.setTextColor(TFT_BLUE);
+  if (sort == QSORT) {
+    sort = ISORT;
+    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("I");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
+  }
+  else if (sort == ISORT) {
+    sort = BOTH;
+    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 30); tft.print("B");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 10); tft.print("O");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 10); tft.print("T");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 30); tft.print("H");
+  }
+  else if (sort == BOTH) {
+    sort = QSORT;
+    tft.fillRect(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40, 10, 100, TFT_WHITE);
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 40); tft.print("Q");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 - 20); tft.print("S");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4); tft.print("O");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 20); tft.print("R");
+    tft.setCursor(MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5, MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4 + 40); tft.print("T");
+  }
+  delay(700);
 }
 
 /**
@@ -175,18 +249,18 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 
 /**
  * Used for when shifting to restaurants near the edge of the map. Makes sure
- * the cursor is centered on the restaurant while ensuring the screen is not 
+ * the cursor is centered on the restaurant while ensuring the screen is not
  * displaying outside of the bounds of the map.
- * 
+ *
  * @param rest The restaurant to be snapped to.
  */
 void cursorAndMapConstrain(restaurant rest) {
-  MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2, 
+  MapPos.X = constrain(lon_to_x(rest.lon) - MAP_DISP_WIDTH/2,
                         0, YEG_SIZE - MAP_DISP_WIDTH);
-  MapPos.Y = constrain(lat_to_y(rest.lat) - MAP_DISP_HEIGHT/2, 
+  MapPos.Y = constrain(lat_to_y(rest.lat) - MAP_DISP_HEIGHT/2,
                         0, YEG_SIZE - MAP_DISP_HEIGHT);
 
-  int diffX = 0; 
+  int diffX = 0;
   int diffY = 0;
 
   if (lon_to_x(rest.lon) < MAP_DISP_WIDTH/2) {
@@ -208,7 +282,7 @@ void cursorAndMapConstrain(restaurant rest) {
 /**
  * Unhighlights the restaurant at the given position in the restaurant list
  * menu.
- * 
+ *
  * @param pos The index of the list item to be unhighlighted.
  */
 void listUnhighlight(int pos) {
@@ -222,7 +296,7 @@ void listUnhighlight(int pos) {
 
 /**
  * Highlights the currently selected restaurant in the restaurant list menu.
- * 
+ *
  * @param pos The index of the list item to be highlighted.
  */
 void listHighlight(int pos) {
@@ -235,12 +309,18 @@ void listHighlight(int pos) {
 }
 
 /**
+<<<<<<< HEAD
  * Shifts the list up or down `shift' number of places. Ensures that the list
  * doesn't scroll past the start or end as well.
  * 
  * @param shift The amount to shift the list by (negative ==> shift up).
  *
  * @returns Whether or not there was a shift.
+=======
+ *
+ *
+ * @param
+>>>>>>> 7d26f598248edeed2d10fe419dbc8f71669f6a52
  */
 bool listShift(int shift) {
   int32_t next_pos;
@@ -252,6 +332,7 @@ bool listShift(int shift) {
     // check that we don't go past the maximum index
     next_pos = min(listPos + shift, NUM_RESTAURANTS - 1);
   }
+<<<<<<< HEAD
 
   if (next_pos != listPos) {
     tft.fillScreen(TFT_BLACK);
@@ -277,6 +358,20 @@ bool listShift(int shift) {
   }
 
   return false;
+=======
+
+  // Grab the 21 required restaurants
+  for (int i = 0; i < 21; i++) {
+    tft.setCursor(0, 15 * i);
+    restaurant rest;
+
+    if ((i + newPos) < NUM_RESTAURANTS) {
+      getRestaurant(restDistances[i + newPos].index, &rest);
+      tft.print(rest.name);
+    }
+
+  }
+>>>>>>> 7d26f598248edeed2d10fe419dbc8f71669f6a52
 }
 
 /**
@@ -397,7 +492,7 @@ void sortRestaurants() {
 
     restDistances[i] = smallerRest;
   }
-  
+
   qsort(restDistances);
   //isort(NUM_RESTAURANTS, restDistances);
 }
@@ -515,9 +610,17 @@ void processTouchScreen() {
 	}
 
   int16_t X = map(touchscreen.y, TS_MINX, TS_MAXX, DISPLAY_WIDTH-1, 0);
+  int16_t Y = map(touchscreen.x, TS_MINY, TS_MAXY, DISPLAY_HEIGHT-1, 0);
 
   if (X < MAP_DISP_WIDTH) {
     drawNearRestaurants();
+  }
+
+  if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT/2 && Y > 0) {
+    cycleRatings();
+  }
+  if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT && Y > DISPLAY_HEIGHT/2) {
+    cycleSorts();
   }
 }
 
