@@ -145,3 +145,16 @@ int32_t ManhattanDist(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
 uint16_t ratingConverter(uint16_t rating) {
   return max(floor((rating+1) / 2), 1);
 }
+
+/**
+ * Prints time difference from current time and inputted time.
+ *
+ * @param start The start time.
+ * @param restInList The number of restaurants in the list.
+ */
+void timingPrinter(int32_t start, uint16_t restInList) {
+  Serial.print(restInList); 
+  Serial.print(" restaurants: ");
+  Serial.print(millis() - start); // current time - start time
+  Serial.println(" ms");
+}

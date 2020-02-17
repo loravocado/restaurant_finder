@@ -6,13 +6,13 @@
 
   CMPUT 275 -- Winter 2020
 
-  Major Assignment #1: Part 1
+  Major Assignment #1: Part 2
 
 */
 
 
 Included Files:
-    * a1part1.cpp       (main program)
+    * a1part2.cpp       (main program)
     * utilities.h       (various misc functions)
     * config.h          (defined variables)
     * lcd_image.cpp     (used for the lcd display)
@@ -40,7 +40,9 @@ Wiring Instructions:
 Running Instructions:
     1. Open the terminal in the folder containing the files.
     2. Make sure the arduino is properly connected to the computer.
-    3. Run the command "make upload" in the terminal.
+    3. Run the command "make upload && serial-mon" in the terminal.
     4. You can now control the cursor using the joystick.
     5. Pressing on the joystick displays the list of restaurants closest to the cursor.
     6. Tapping on the map displays all restaurants visible on the screen at the current position.
+    7. Tap on the top right button to change the rating threshold.
+    8. Tap on the bottom right button to change the sort type used.

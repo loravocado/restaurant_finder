@@ -6,7 +6,7 @@
 
   CMPUT 275 -- Winter 2020
 
-  Major Assignment #1: Part 1
+  Major Assignment #1: Part 2
 
 */
 
@@ -27,7 +27,7 @@ lcd_image_t yegImage = {"yeg-big.lcd", YEG_SIZE, YEG_SIZE};
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 Sd2Card card;
 
-// Global variables
+//// START Global variables ////
 Coord MapPos; // Stores X and Y of current map position
 Coord CursorPos; // Stores X and Y of cursor position relative to screen
 
@@ -38,9 +38,11 @@ int32_t listPos = 0; // Stores the current position in the restaurant
                                 //distance array
 RestDist restDistances[NUM_RESTAURANTS]; // Stores restaurants based on distance
 
-bool Mode = 0;
-sortState sort = QSORT;
-int currentRating = 1;
+bool Mode = 0; // Mode 0 or Mode 1
+sortState sort = QSORT; // Sort type
+int currentRating = 1; // Current rating threshold
+uint16_t restInList = 0; // Number of restaurants in the list
+//// END Global variables ////
 
 // Forward declaration for getRestaurant function.
 void getRestaurant(int restIndex, restaurant* restPtr);
@@ -82,47 +84,45 @@ void ratingSelectorButton() {
 
   // Text
   tft.setTextColor(TFT_GREEN);
-  tft.setCursor(button1X, button1Y); tft.print(currentRating);
+  tft.setCursor(ratingButton_X, ratingButton_Y); tft.print(currentRating);
 }
 
 /**
  * Draws text for "QSORT"
  */
 void qsort_text() {
-  tft.setCursor(button2X, button2Y - 40); tft.print("Q");
-  tft.setCursor(button2X, button2Y - 20); tft.print("S");
-  tft.setCursor(button2X, button2Y); tft.print("O");
-  tft.setCursor(button2X, button2Y + 20); tft.print("R");
-  tft.setCursor(button2X, button2Y + 40); tft.print("T");
+  tft.setCursor(sortButton_X, sortButton_Y - 40); tft.print("Q");
+  tft.setCursor(sortButton_X, sortButton_Y - 20); tft.print("S");
+  tft.setCursor(sortButton_X, sortButton_Y); tft.print("O");
+  tft.setCursor(sortButton_X, sortButton_Y + 20); tft.print("R");
+  tft.setCursor(sortButton_X, sortButton_Y + 40); tft.print("T");
 }
 
 /**
  * Draws text for "ISORT"
  */
 void isort_text() {
-  tft.setCursor(button2X, button2Y - 40); tft.print("I");
-  tft.setCursor(button2X, button2Y - 20); tft.print("S");
-  tft.setCursor(button2X, button2Y); tft.print("O");
-  tft.setCursor(button2X, button2Y + 20); tft.print("R");
-  tft.setCursor(button2X, button2Y + 40); tft.print("T");
+  tft.setCursor(sortButton_X, sortButton_Y - 40); tft.print("I");
+  tft.setCursor(sortButton_X, sortButton_Y - 20); tft.print("S");
+  tft.setCursor(sortButton_X, sortButton_Y); tft.print("O");
+  tft.setCursor(sortButton_X, sortButton_Y + 20); tft.print("R");
+  tft.setCursor(sortButton_X, sortButton_Y + 40); tft.print("T");
 }
 
 /**
  * Draws text for "BOTH"
  */
 void both_text() {
-  tft.setCursor(button2X, button2Y - 30); tft.print("B");
-  tft.setCursor(button2X, button2Y - 10); tft.print("O");
-  tft.setCursor(button2X, button2Y + 10); tft.print("T");
-  tft.setCursor(button2X, button2Y + 30); tft.print("H");
+  tft.setCursor(sortButton_X, sortButton_Y - 30); tft.print("B");
+  tft.setCursor(sortButton_X, sortButton_Y - 10); tft.print("O");
+  tft.setCursor(sortButton_X, sortButton_Y + 10); tft.print("T");
+  tft.setCursor(sortButton_X, sortButton_Y + 30); tft.print("H");
 }
 
 /**
  * Draws the bottom right button for selecting sort type.
- * 
- * @param sortType The type of sort selected.
  */
-void sortSelectorButton(sortState sortType = QSORT) {
+void sortSelectorButton() {
   // Background rectangle
   tft.fillRect(MAP_DISP_WIDTH + 1, DISPLAY_HEIGHT/2, MENU_BUTTON_WIDTH, 
                 MENU_BUTTON_HEIGHT/2, TFT_WHITE);
@@ -152,7 +152,6 @@ void cycleRatings() {
   }
 
   ratingSelectorButton();
-  delay(500);
 }
 
 /**
@@ -167,8 +166,7 @@ void cycleSorts() {
     sort = QSORT;   
   }
 
-  sortSelectorButton(sort);
-  delay(500);
+  sortSelectorButton();
 }
 
 /*
@@ -308,8 +306,8 @@ void cursorAndMapConstrain(restaurant rest) {
     diffY = -(MAP_DISP_HEIGHT/2 - (YEG_SIZE - lat_to_y(rest.lat)));
   }
 
-  CursorPos.X = MAP_DISP_WIDTH/2 - diffX;
-  CursorPos.Y = MAP_DISP_HEIGHT/2 - diffY;
+  CursorPos.X = constrain(MAP_DISP_WIDTH/2 - diffX, cursorMin_X, cursorMax_X);
+  CursorPos.Y = constrain(MAP_DISP_HEIGHT/2 - diffY, cursorMin_Y, cursorMax_Y);
 }
 
 /**
@@ -357,7 +355,7 @@ bool listShift(int shift) {
     next_pos = max(listPos + shift, 0);
   } else { // shift in the positive (down) direction.
     // check that we don't go past the maximum index
-    next_pos = min(listPos + shift, NUM_RESTAURANTS - 1);
+    next_pos = min(listPos + shift, restInList - 1);
   }
 
   if (next_pos != listPos) {
@@ -371,7 +369,7 @@ bool listShift(int shift) {
     for (int i = 0; i < 21; i++) {
       tft.setCursor(0, 15 * i);
     
-      if ((i + listPos) < NUM_RESTAURANTS) {
+      if ((i + listPos) < restInList) {
         restaurant rest;
         getRestaurant(restDistances[i + listPos].index, &rest);
         tft.print(rest.name);
@@ -401,7 +399,7 @@ void restaurantListScreen() {
   listPos = 0; // reset initial list position
   int currentItemIndex = 0; // relative index of currently selected item on list
 
-  // Grab the 21 closest restaurants
+  // Grab the 21 closest restaurants with sufficient rating
   for (int i = 0; i < 21; i++) {
     restaurant rest;
     getRestaurant(restDistances[i + listPos].index, &rest);
@@ -416,7 +414,7 @@ void restaurantListScreen() {
 
     if (yVal <= 23) { // Move up the list
       if (currentItemIndex == 0) {
-        bool wasChange = listShift(-21);
+        bool wasChange = listShift(-21); // Shift to the previous page
 
         if (wasChange) {
           currentItemIndex = 20;
@@ -429,13 +427,13 @@ void restaurantListScreen() {
       } 
     } else if (yVal >= 1000) { // Move down the list
       if (currentItemIndex == 20) {
-        bool wasChange = listShift(21);
+        bool wasChange = listShift(21); // Shift to the next page
 
         if (wasChange) {
           currentItemIndex = 0;
           listHighlight(currentItemIndex);
         }
-      } else if (listPos + currentItemIndex + 1 < NUM_RESTAURANTS) {
+      } else if (listPos + currentItemIndex + 1 < restInList) {
         listUnhighlight(currentItemIndex);
         currentItemIndex += 1;
         listHighlight(currentItemIndex);
@@ -465,24 +463,28 @@ void drawNearRestaurants() {
     restaurant rest;
     getRestaurant(i, &rest);
 
-    int16_t X = lon_to_x(rest.lon);
-    int16_t Y = lat_to_y(rest.lat);
+    int rating = ratingConverter(rest.rating);
 
-    if (X >= (MapPos.X + 2) && X <= (MapPos.X + MAP_DISP_WIDTH - 2) &&
-        Y >= (MapPos.Y + 2) && Y <= (MapPos.Y + MAP_DISP_HEIGHT - 2)) {
+    if (rating >= currentRating) { // only draw if above rating threshold
+      int16_t X = lon_to_x(rest.lon);
+      int16_t Y = lat_to_y(rest.lat);
 
-      tft.fillCircle(X - MapPos.X, Y - MapPos.Y, 3, TFT_BLUE);
+      if (X >= (MapPos.X + 2) && X <= (MapPos.X + MAP_DISP_WIDTH - 2) &&
+          Y >= (MapPos.Y + 2) && Y <= (MapPos.Y + MAP_DISP_HEIGHT - 2)) {
 
+        tft.fillCircle(X - MapPos.X, Y - MapPos.Y, 3, TFT_BLUE);
+
+      }
     }
   }
 }
 
 /**
- * Grabs all the restaurants and sorts them based on proximity to the cursor.
- * Insertion sort is used to accomplish this.
+ * Grabs all the restaurants and calculates their distance from the cursor.
+ * The distance is then stored in an array.
  */
-void sortRestaurants() {
-  int numRestaurants = 0;
+void calcRestDistances() {
+  restInList = 0;
   int emptyIndexes = 0;
 
   for (int i = 0; i < NUM_RESTAURANTS; i++) {
@@ -491,8 +493,9 @@ void sortRestaurants() {
 
     int rating = ratingConverter(rest.rating);
 
-    if (rating >= currentRating) {
-      numRestaurants++;
+    if (rating >= currentRating) { // check if rating threshold is met
+
+      restInList++;
 
       int16_t X1 = lon_to_x(rest.lon);
       int16_t Y1 = lat_to_y(rest.lat);
@@ -507,31 +510,54 @@ void sortRestaurants() {
       smallerRest.dist = manhattanDist;
 
       restDistances[i - emptyIndexes] = smallerRest;
+
     } else {
+
       emptyIndexes++;
+
     }
   }
+}
+
+/**
+ * Sorts the restaurants and times how long the respective sort type took.
+ */
+void sortRestaurants() {
+  // Populate restDistances array with correct distance information
+  calcRestDistances();
 
   // sort restaurants and time how long it takes
   int32_t start = millis();
 
-  if (sort == QSORT) {
-    Serial.print("qsort "); 
-    qsort(restDistances, 0, numRestaurants - 1);
-  } else if (sort == ISORT) {
-    Serial.print("isort ");
-    isort(numRestaurants, restDistances);
-  } else { // Both tests
-    isort(numRestaurants, restDistances);
-    //qsort(restDistances, 0, numRestaurants);
-  }
-  
-  int32_t end = millis();
+  if (sort == QSORT) { // qsort test
 
-  Serial.print(numRestaurants); 
-  Serial.print(" restaurants: ");
-  Serial.print(end - start); 
-  Serial.println(" ms");
+    Serial.print("qsort "); 
+    qsort(restDistances, 0, restInList - 1);
+    timingPrinter(start, restInList);
+
+  } else if (sort == ISORT) { // isort test
+
+    Serial.print("isort ");
+    isort(restInList, restDistances);
+    timingPrinter(start, restInList);
+
+  } else { // Both tests
+
+    // isort first
+    Serial.print("isort ");
+    isort(restInList, restDistances);
+    timingPrinter(start, restInList);
+
+    // Place the restaurants back in original order
+    calcRestDistances();
+
+    // qsort next
+    start = millis();
+    Serial.print("qsort "); 
+    qsort(restDistances, 0, restInList - 1);
+    timingPrinter(start, restInList);
+
+  }
 }
 
 /**
@@ -556,17 +582,18 @@ void processJoystick() {
   int prev_X = CursorPos.X;
   int prev_Y = CursorPos.Y;
 
-  if (Mode == 0 && buttonVal == LOW) {
-    Mode = 1;
+  if (Mode == 0 && buttonVal == LOW) { // Button pressed on map
 
+    Mode = 1;
     tft.fillScreen(TFT_BLACK);
     sortRestaurants();
     restaurantListScreen();
+
   }
 
-  if (Mode == 1 && buttonVal == LOW) {
-    Mode = 0;
+  if (Mode == 1 && buttonVal == LOW) { // Button pressed on menu
 
+    Mode = 0;
     tft.fillScreen(TFT_BLACK);
 
     // Draw the buttons for selecting the rating and sort type
@@ -577,18 +604,24 @@ void processJoystick() {
     lcd_image_draw(&yegImage, &tft, MapPos.X, MapPos.Y,
                    0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
     redrawCursor(TFT_RED);
+
   } else if (Mode == 0) { // check if the joystick is moved
+
+    // Horizontal input
     if (abs(xVal - JOY_CENTER) > JOY_DEADZONE) {
       CursorPos.X -= MAX_SPEED * (xVal - JOY_CENTER) / (JOY_CENTER);
-      CursorPos.X = constrain(CursorPos.X, min_X, max_X);
+      CursorPos.X = constrain(CursorPos.X, cursorMin_X, cursorMax_X);
     }
 
+    // Vertical input
     if (abs(yVal - JOY_CENTER) > JOY_DEADZONE) {
       CursorPos.Y += MAX_SPEED * (yVal - JOY_CENTER) / (JOY_CENTER);
-      CursorPos.Y = constrain(CursorPos.Y, min_Y, max_Y);
+      CursorPos.Y = constrain(CursorPos.Y, cursorMin_Y, cursorMax_Y);
     }
 
-    if (CursorPos.X == max_X) {
+    // Check if screen needs to be shifted (if the cursor is on the edge of
+      // the map)
+    if (CursorPos.X == cursorMax_X) {
       if (MapPos.X + 2*MAP_DISP_WIDTH < YEG_SIZE) {
         MapPos.X += MAP_DISP_WIDTH;
         shiftScreen();
@@ -598,7 +631,7 @@ void processJoystick() {
       }
     }
 
-    if (CursorPos.X == min_X) {
+    else if (CursorPos.X == cursorMin_X) {
       if (MapPos.X - MAP_DISP_WIDTH > 0) {
         MapPos.X -= MAP_DISP_WIDTH;
         shiftScreen();
@@ -608,7 +641,7 @@ void processJoystick() {
       }
     }
 
-    if (CursorPos.Y == max_Y) {
+    else if (CursorPos.Y == cursorMax_Y) {
       if (MapPos.Y + 2*DISPLAY_HEIGHT < YEG_SIZE) {
         MapPos.Y += DISPLAY_HEIGHT;
         shiftScreen();
@@ -618,7 +651,7 @@ void processJoystick() {
       }
     }
 
-    if (CursorPos.Y == min_Y) {
+    else if (CursorPos.Y == cursorMin_Y) {
       if (MapPos.Y - DISPLAY_HEIGHT > 0) {
         MapPos.Y -= DISPLAY_HEIGHT;
         shiftScreen();
@@ -628,12 +661,13 @@ void processJoystick() {
       }
     }
 
-    // draw a small patch of the Edmonton map at the old cursor position before
-    // drawing a red rectangle at the new cursor position
+    // Draw a small patch of the Edmonton map at the old cursor position, then
+    // draw a red rectangle at the new cursor position
     if ((prev_X != CursorPos.X) || (prev_Y != CursorPos.Y)) {
       redrawMap(prev_X, prev_Y);
       redrawCursor(TFT_RED);
     }
+
   }
 }
 
@@ -662,16 +696,18 @@ void processTouchScreen() {
   // Cycle rating
   if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT/2 && Y > 0) {
     cycleRatings();
+    delay(500);
   }
 
   // Cycle sort type
   if (X > MAP_DISP_WIDTH && X < DISPLAY_WIDTH && Y < DISPLAY_HEIGHT && Y > DISPLAY_HEIGHT/2) {
     cycleSorts();
+    delay(500);
   }
 }
 
 /**
- * Main function of program. Continuously processes touchscreen loop.
+ * Main function of program. Continuously processes joystick/touchscreen loop.
  */
 int main() {
   setup();

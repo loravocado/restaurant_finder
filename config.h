@@ -18,7 +18,7 @@
 #define MENU_BUTTON_HEIGHT DISPLAY_HEIGHT
 #define MENU_BUTTON_WIDTH 59
 
-
+// Restaurant constants
 #define REST_START_BLOCK 4000000
 #define NUM_RESTAURANTS 1066
 
@@ -43,13 +43,13 @@
 #define JOY_DEADZONE 64
 
 // the "bounds" of the cursor so that it doesn't go off the map
-#define min_X (CURSOR_SIZE/2)
-#define max_X (DISPLAY_WIDTH - CURSOR_SIZE/2 - 61)
-#define min_Y (CURSOR_SIZE/2)
-#define max_Y (DISPLAY_HEIGHT - CURSOR_SIZE/2 - 1)
+#define cursorMin_X (CURSOR_SIZE/2)
+#define cursorMax_X (DISPLAY_WIDTH - CURSOR_SIZE/2 - 61)
+#define cursorMin_Y (CURSOR_SIZE/2)
+#define cursorMax_Y (DISPLAY_HEIGHT - CURSOR_SIZE/2 - 1)
 
 // Positions to write to the side buttons
-#define button1X (MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5)
-#define button1Y (MENU_BUTTON_HEIGHT/4 - 10)
-#define button2X (MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5)
-#define button2Y (MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4)
+#define ratingButton_X (MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5)
+#define ratingButton_Y (MENU_BUTTON_HEIGHT/4 - 10)
+#define sortButton_X (MAP_DISP_WIDTH + MENU_BUTTON_WIDTH/2 - 5)
+#define sortButton_Y (MENU_BUTTON_HEIGHT/2 + MENU_BUTTON_HEIGHT/4)
